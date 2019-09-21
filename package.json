@@ -1,22 +1,35 @@
 {
   "name": "projet",
   "version": "1.0.0",
-  "description": "",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start" : "env-cmd -f ./.env nodemon app.js"
+    "start": "env-cmd -f ./.env nodemon app.js",
+    "puppeteer": "env-cmd -f ./.env nodemon puppeteer_server/server.js"
   },
-  "author": "",
+  "author": "Nicolas <nico.hincelin@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "ejs": "^2.7.1",
     "env-cmd": "^10.0.1",
     "express": "^4.17.1",
+    "express-generator": "^4.16.1",
     "mongodb": "^3.3.2",
     "mongoose": "^5.7.1",
     "nodemon": "^1.19.2",
+    "puppeteer": "^1.20.0",
+    "request": "^2.88.0",
     "socket.io": "^2.3.0",
     "yarn": "^1.17.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nicotitine/csl_project.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nicotitine/csl_project/issues"
+  },
+  "homepage": "https://github.com/nicotitine/csl_project#readme",
+  "description": ""
 }

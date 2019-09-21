@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <% include ../partials/head %>
+</head>
+
+<body>
+
+    <header>
+        <% include ../partials/nav %>
+    </header>
+    <br />
+    <br />
+    <section class="container">
+        <div class="jumbotron">
+            <h1><%= product.name %> <small>(<%= product.generic_name %>)</small></h1>
+            <small><%= product.gtin %> (<%= product.retailers %>)</small>
+
+            <h3>Prices</h3>
+            <ul id="prices">
+            </ul>
+
+            <h3>Images</h3>
+            <div id="images"></div>
+
+            <h3>Ingredients</h3>
+            <ul>
+                <% product.ingredients.forEach((ingredient) => { %>
+                <li><%= ingredient.charAt(0).toUpperCase() + ingredient.substring(1) %></li>
+                <% }); %>
+            </ul>
+
+            <h3>Quantity</h3>
+            <p><%= product.quantity %></p>
+
+            <span id='variableJSON' hidden>
+                <%= JSON.stringify(product); %>
+            </span>
+        </div>
+    </section>
+
+    <footer>
+        <% include ../partials/footer %>
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.4.1.js"
+        integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var variableJSON = JSON.parse($('#variableJSON').text());
+        $('#variableJSON').remove();
+        console.log(variableJSON);
+        var socket = io();
+        socket.emit('requestAdditionalInfos', {
+            gtin: variableJSON.gtin,
+            retailers: variableJSON.retailers
+        })
+        socket.on('responseAdditionalInfos', (response) => {
+            console.log(response[0]);
+            response.forEach((retailer) => {
+                console.log(retailer);
+
+                $("#prices").append(`<li>${retailer.retailer} : ${retailer.data.price} <small>(${retailer.data.price_kg})</small></li>`);
+                retailer.data.images.forEach((image) => {
+                    console.log(image);
+                    
+                    $('#images').append(`<img src="${image}" width="500px"/>`);
+                    console.log($('#images'));
+                    
+                });
+            })
+
+        });
+    </script>
+</body>
+
+</html>
