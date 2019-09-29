@@ -18,15 +18,30 @@ const productSchema = mongoose.Schema({
     generic_name: {
         type: String
     },
-    retailers: {
-        type: String
-    },
     ingredients: [{
         type: String
     }],
     quantity: {
         type: String
-    }
+    },
+    retailers: [{
+        name: {
+            type: String
+        },
+        drives: [{
+            location: {
+                type: String
+            },
+            zipcodes: [{
+                type: String,
+                minlength: 5,
+                maxlength: 5
+            }],
+            price: [{
+                type: Number
+            }]
+        }]
+    }]
 })
 
 const Product = mongoose.model('Product', productSchema);

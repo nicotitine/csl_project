@@ -14,10 +14,42 @@
     <br />
     <section class="container">
         <div class="jumbotron">
-            <h1><%= product.name %> <small>(<%= product.generic_name %>)</small></h1>
-            <small><%= product.gtin %> (<%= product.retailers %>)</small>
-
+            <%if (product != null) { %>
+            <h1><%= product.name %> - <%=product.quantity%> <small>(<%= product.generic_name %>)</small></h1>
+            <small><%= product.gtin %></small>
+            <hr />
             <h3>Prices</h3>
+            <ul id="carrefourPrice">
+            </ul>
+            <form class="needs-validation" id="zipcodeForm" novalidate>
+                <div class="form-row">
+                    <div class="col-md-4 mb-3">
+                        <div class="input-group">
+                            <label for="zipcodeInput">Enter your zipcode to check for your local prices <small>(Your
+                                    data is not
+                                    stored)</small></label>
+                            <input id="zipcodeInput" type="text" name="zipcodeInput" class="form-control"
+                                placeholder="Zipcode (Ex: 64000)" aria-label="zipcode" aria-describedby="basic-addon2"
+                                minlength="5" maxlength="5" required>
+                            <div class="input-group-append">
+                                <button id="zipcodeSubmitBtn" class="btn btn-outline-primary" type="submit"
+                                    href="">Send</button>
+                            </div>
+                            <div class="invalid-feedback">
+                                Please choose a valid zipcode.
+                            </div>
+                            <div><small>This can take a while (up to 30') and is not 100% successful</small></div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </form>
+
+            <div style="width: 30%">
+                <div class="input-group mb-3" width="30%">
+                </div>
+            </div>
             <ul id="prices">
             </ul>
 
@@ -37,6 +69,15 @@
             <span id='variableJSON' hidden>
                 <%= JSON.stringify(product); %>
             </span>
+            <% } else { %>
+            <h1><%= error %></h1>
+            <hr />
+            <br />
+            <br />
+            <div class="text-center">
+                <button href="#" class="btn btn-primary">Back to home</button>
+            </div>
+            <% } %>
         </div>
     </section>
 
@@ -50,27 +91,80 @@
         var variableJSON = JSON.parse($('#variableJSON').text());
         $('#variableJSON').remove();
         console.log(variableJSON);
-        var socket = io();
-        socket.emit('requestAdditionalInfos', {
-            gtin: variableJSON.gtin,
-            retailers: variableJSON.retailers
-        })
-        socket.on('responseAdditionalInfos', (response) => {
-            console.log(response[0]);
-            response.forEach((retailer) => {
-                console.log(retailer);
 
-                $("#prices").append(`<li>${retailer.retailer} : ${retailer.data.price} <small>(${retailer.data.price_kg})</small></li>`);
-                retailer.data.images.forEach((image) => {
-                    console.log(image);
-                    
+        if (variableJSON.retailers.length == 0) {
+            let gtin = variableJSON.gtin;
+            var socket = io();
+            socket.emit('getImages', gtin);
+            socket.on('getImagesResponse', (response) => {
+                console.log(response);
+                response.data.forEach((image) => {
                     $('#images').append(`<img src="${image}" width="500px"/>`);
-                    console.log($('#images'));
-                    
                 });
-            })
+            });
 
-        });
+            socket.on('getPriceAuchanResponse', (response) => {
+                console.log(response);
+                $("#prices").append(
+                    `<li>${response.data.retailer} <small>(${response.data.drive} - ${response.data.zipcode})</small> : ${response.data.price}€</li>`
+                );
+            });
+
+            socket.on('getPriceLeclercResponse', (response) => {
+                console.log(response);
+                $("#prices").append(
+                    `<li>${response.data.retailer} <small>(${response.data.drive} - ${response.data.zipcode})</small> : ${response.data.price}€</li>`
+                );
+            });
+
+            socket.emit('getPriceCarrefour', gtin);
+            socket.on('getPriceCarrefourResponse', (response) => {
+                console.log(response);
+                $("#carrefourPrice").append(
+                    `<li>${response.data.retailer} : ${response.data.price}€</li>`);
+            });
+
+            $('#zipcodeForm').on('submit', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if ($('#zipcodeForm')[0].checkValidity() === false) {
+
+                } else {
+                    var cp = $('#zipcodeInput').val();
+                    console.log(cp);
+
+                    socket.emit('getPriceAuchan', gtin, cp);
+                    socket.emit('getPriceLeclerc', gtin, cp);
+                }
+                $('#zipcodeForm')[0].classList.add('was-validated');
+            });
+
+            // $("#zipcodeSubmitBtn").on('click', (e) => {
+            //     var cp = $('#zipcodeInput').val();
+            //     console.log(cp);
+
+            // });
+
+            //socket.emit('requestAdditionalInfos', variableJSON)
+            socket.on('responseAdditionalInfos', (response) => {
+                console.log(response);
+                response.forEach((retailer) => {
+                    console.log(retailer);
+
+                    $("#carrefourPrice").append(
+                        `<li>${retailer.retailer} : ${retailer.data.price}€</li>`);
+                    retailer.data.images.forEach((image) => {
+                        console.log(image);
+
+                        $('#images').append(`<img src="${image}" width="500px"/>`);
+                        console.log($('#images'));
+
+                    });
+                })
+
+            });
+        }
     </script>
 </body>
 
