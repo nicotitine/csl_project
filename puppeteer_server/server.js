@@ -46,7 +46,8 @@ app.get('/:gtin/price/auchan/:zipcode', async (req, res) => {
         price: data.price,
         drive: data.drive,
         retailer: 'Auchan',
-        zipcode: req.params.zipcode
+        zipcode: req.params.zipcode,
+        found: data.found
     });
 })
 
@@ -59,9 +60,36 @@ app.get('/:gtin/price/leclerc/:zipcode', async (req, res) => {
         price: data.price,
         drive: data.drive,
         retailer: 'Leclerc',
-        zipcode: req.params.zipcode
+        zipcode: req.params.zipcode,
+        found: data.found
     });
-    
+
+});
+
+app.get('/:gtin/price/magasinsu/:zipcode', async (req, res) => {
+    const data = await puppeteer_magasinsu_price(req.params.gtin, req.params.zipcode);
+
+    res.set('Content-Type', 'application/json');
+    res.status(200).send({
+        price: data.price,
+        drive: data.drive,
+        retailer: 'Magasins U',
+        zipcode: req.params.zipcode,
+        found: data.found
+    });
+});
+
+app.get('/:gtin/price/intermarche/:zipcode', async (req, res) => {
+    const data = await puppeteer_intermarche_price(req.params.gtin, req.params.zipcode);
+
+    res.set('Content-Type', 'application/json');
+    res.status(200).send({
+        price: data.price,
+        drive: data.drive,
+        retailer: 'Intermarché',
+        zipcode: req.params.zipcode,
+        found: data.found
+    });
 })
 
 app.get('/:gtin/carrefour', async (req, res) => {
@@ -320,7 +348,8 @@ async function puppeteer_auchan_price(gtin, zipcode) {
     let data = {
         price: 'Product not available',
         drive: '-',
-        local_id: null
+        local_id: null,
+        found: false
     };
 
     await page.setExtraHTTPHeaders({
@@ -338,14 +367,15 @@ async function puppeteer_auchan_price(gtin, zipcode) {
     })
 
     if (auchanID == null) {
+        await browser.close();
         return data;
     }
 
     data.local_id = auchanID
 
     // Auchan divides its drive searchs in two ways :
-    //  - on auchandrive.fr
-    //  - on auchan.fr
+    //  - on auchandrive.fr (for regular Auchan)
+    //  - on auchan.fr      (for My Auchan)
     let isNewVersion = false;
 
     await page.goto('https://www.auchandrive.fr/');
@@ -384,15 +414,17 @@ async function puppeteer_auchan_price(gtin, zipcode) {
         let data = {
             price: 'Product localy not found',
             drive: null,
-            local_id: auchanID
+            local_id: auchanID,
+            found: false
         };
 
         if (isNewVersion) {
             if (document.querySelector('span[class="product-price__unit"]') != null && document.querySelector('span[class="product-price__cents"]') != null) {
                 let stringPrice = document.querySelector('span[class="product-price__unit"]').innerHTML + '.' + document.querySelector('span[class="product-price__cents"]').innerHTML;
                 data.price = parseFloat(stringPrice);
-                data.drive = document.querySelector('div[class="journey__context-address"]').innerHTML.replace(/\\n/gi, '').trim();
+                data.found = true;
             }
+            data.drive = document.querySelector('div[class="journey__context-address"]').innerHTML.replace(/\\n/gi, '').trim();
         } else {
 
             if (document.querySelector('p[class="price-standard"] span[class="price-standard__decimal"]') != null &&
@@ -400,8 +432,9 @@ async function puppeteer_auchan_price(gtin, zipcode) {
                 let stringPrice = document.querySelector('p[class="price-standard"] span[class="price-standard__decimal"]').innerHTML + document.querySelector('p[class="price-standard"] span[class="price-standard__cents"]').innerHTML;
                 let priceToNumber = stringPrice.split(',');
                 data.price = parseFloat(priceToNumber[0] + '.' + priceToNumber[1]);
-                data.drive = document.querySelector('div[class="header__identity-pointOfService"] em').innerHTML.replace(/\\n/gi, '').trim();
+                data.found = true;
             }
+            data.drive = document.querySelector('div[class="header__identity-pointOfService"] em').innerHTML.replace(/\\n/gi, '').trim();
         }
 
         return data;
@@ -427,6 +460,7 @@ async function puppeteer_leclerc_price(gtin, zipcode) {
     let data = {
         price: 'Product not available',
         drive: '-',
+        found: false
     };
 
 
@@ -434,56 +468,173 @@ async function puppeteer_leclerc_price(gtin, zipcode) {
     await page.waitFor(1000);
 
     const fullName = await page.evaluate(() => {
-        let firstLabel = document.querySelector('div[id="conteneur_produits"] div[class="div_descriptif_produit"] h1').innerHTML.trim();
-        let secondLabel = document.querySelector('div[id="conteneur_produits"] div[class="div_descriptif_produit"] p').innerHTML.trim();
+        if (document.querySelector('div[id="conteneur_produits"] div[class="div_descriptif_produit"] h1') != null &&
+            document.querySelector('div[id="conteneur_produits"] div[class="div_descriptif_produit"] p') != null) {
+            let firstLabel = document.querySelector('div[id="conteneur_produits"] div[class="div_descriptif_produit"] h1').innerHTML.trim();
+            let secondLabel = document.querySelector('div[id="conteneur_produits"] div[class="div_descriptif_produit"] p').innerHTML.trim();
+            return (firstLabel + ' ' + secondLabel).trim();
+        }
 
-        return (firstLabel + ' ' + secondLabel).trim();
+        return null;
     });
+
+    if (fullName == null) {
+        await browser.close();
+        return data;
+    }
 
 
     await page.goto('https://www.leclercdrive.fr/');
     await page.waitFor(1000);
-    await page.type('input[id="txtWPAD344_RechercheDrive"]', zipcode + '\n', {delay: 20});
+    await page.type('input[id="txtWPAD344_RechercheDrive"]', zipcode + '\n', {
+        delay: 20
+    });
     await page.waitFor(1000);
     await page.click('a[data-type="prediction"]');
     await page.waitFor(1000);
     await page.click('div[class="popinPRPL-choix"] a');
     await page.waitFor(1000);
-    await page.type('input[id="inputWRSL301_rechercheTexte"]', fullName + '\n', {delay: 20});
+    await page.type('input[id="inputWRSL301_rechercheTexte"]', fullName + '\n', {
+        delay: 20
+    });
     await page.waitFor(1000);
 
     const result = await page.evaluate((fullName) => {
         let data = {
             price: 'Product not available',
             drive: '-',
+            found: false
         };
 
         data.drive = document.querySelector('a[id="aWCSD333_PL"]').innerHTML.trim();
 
         let products = document.querySelectorAll('ul[id="ulListeProduits"] li[class="liWCRS310_Product     "]');
-        
-        for(let i = 0; i < products.length; i++) {
+
+        for (let i = 0; i < products.length; i++) {
             let productName = products[i].querySelector('p[class="pWCRS310_Desc"] a[class="aWCRS310_Product"]').innerHTML.split('<br>');
             let finalName = productName[0].trim() + ' ' + productName[1].trim();
-            console.log(finalName);
-            console.log(fullName);
-            console.log(finalName == fullName);
-            
-            if(finalName == fullName) {
+
+            if (finalName == fullName) {
                 // remplir data avec : 
                 //  - le prix
                 //  - le drive
                 data.price = parseFloat(products[i].querySelector('p[class="pWCRS310_PrixUnitaire"]').innerHTML.replace('€', '').trim());
-
+                data.found = true;
                 return data;
             }
-
             return data;
-            
         }
     }, fullName);
 
     console.log(result);
+    return result;
+}
+
+async function puppeteer_magasinsu_price(gtin, zipcode) {
+    const browser = await puppeteer.launch(PUPPETEER_BROWSER_OPTS);
+    const page = await browser.newPage();
+    await page.setViewport({
+        width: 1920,
+        height: 1080
+    });
+
+    let data = {
+        price: 'Product not available',
+        drive: '-',
+        found: false
+    };
+
+    await page.goto('https://www.coursesu.com/drive/home');
+    await page.waitFor(1000);
+    await page.type('input[id="store-search"]', zipcode, {
+        delay: 20
+    });
+    await page.waitFor(500);
+    await page.click('p[class="search-suggestion"] span');
+    await page.waitFor(1000);
+    await page.click('ul[id="quick-content"] a[class="button accent-button choose"]');
+    await page.waitFor(1500);
+    await page.click('div[class="custom-dialog__dialog custom-dialog__dialog--login"] a[class="ui-button ui-button--background custom-dialog__close"]');
+    await page.waitFor(500);
+    await page.type('input[id="q"]', gtin + '\n', {
+        delay: 20
+    });
+    await page.waitFor(1000);
+
+    const result = page.evaluate(() => {
+        let data = {
+            price: 'Product not available',
+            drive: '-',
+            found: false
+        };
+
+        if (document.querySelector('ul[id="search-result-items"] li') != null) {
+            let stringPrice = document.querySelector('ul[id="search-result-items"] li span[class="sale-price"] span').innerHTML.split(',')[0] + '.' + document.querySelector('ul[id="search-result-items"] li span[class="sale-price"] sup').innerHTML
+            data.price = parseFloat(stringPrice);
+            data.found = true;
+        }
+
+        data.drive = document.querySelector('nav span[class="store-name"').innerHTML;
+        console.log(data);
+
+        return data;
+    });
+
+    console.log(result);
+    return result;
+}
+
+async function puppeteer_intermarche_price(gtin, zipcode) {
+    const browser = await puppeteer.launch(PUPPETEER_BROWSER_OPTS);
+    const page = await browser.newPage();
+    await page.setViewport({
+        width: 1920,
+        height: 1080
+    });
+
+    let data = {
+        price: 'Product not available',
+        drive: '-',
+        found: false
+    };
+
+    await page.goto('https://www.intermarche.com/');
+    await page.waitFor(1000);
+    await page.click('div[id="didomi-popup"] button[class="didomi-components-button didomi-button didomi-components-button--color didomi-button-highlight"]');
+    await page.waitFor(500);
+    await page.type('input[id="downshift-0-input"]', zipcode, {
+        delay: 20
+    });
+    await page.waitFor(1500);
+    await page.click('li[id="downshift-0-item-0"]');
+    await page.waitFor(1000);
+
+    const driveID = await page.evaluate(() => {
+        return window.location.href.split('/')[4];
+    });
+
+    await page.goto(`https://intermarche.com/rechercheproduits/${driveID}/recherche/product/${gtin}`)
+
+    await page.waitFor(2000);
+
+    const result = await page.evaluate(() => {
+        let data = {
+            price: 'Product not available',
+            drive: '-',
+            found: false
+        };
+        if (document.querySelectorAll('.ReactModal__Content .product-price--integer')[0] != null &&
+            document.querySelectorAll('.ReactModal__Content .product-price--decimal')[0] != null) {
+            let priceUnit = document.querySelectorAll('.ReactModal__Content .product-price--integer')[0].innerHTML;
+            let priceDecimal = document.querySelectorAll('.ReactModal__Content .product-price--decimal')[0].innerHTML;
+            data.price = parseFloat(priceUnit + "." + priceDecimal);
+            data.found = true;
+        }
+        data.drive = document.querySelector('button[class="sc-gPEVay gEcnxj"]').innerHTML.split("<svg")[0];
+
+        return data;
+    })
+
     return result;
 }
 

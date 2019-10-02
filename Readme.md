@@ -8,7 +8,7 @@
   - waitFor(1000)
   - Si querySelector => produit trouvé - retourner le prix, sinon produit non trouvé
 
-Magasin U
+## Magasins U
 
 - choisir un CP coursesu.com/drive/home
 - Cherche un produit :

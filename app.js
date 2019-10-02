@@ -198,7 +198,35 @@ io.on('connection', (socket) => {
                 data: JSON.parse(body)
             });
         })
-    })
+    });
+
+    socket.on('getPriceMagasinsU', async (gtin, zipcode) => {
+        request('http://localhost:9091/' + gtin + '/price/magasinsu/' + zipcode, (error, response, body) => {
+            if(error) {
+                socket.emit('getPriceMagasinsUResponse', {
+                    error: error
+                });
+                return;
+            }
+            socket.emit('getPriceMagasinsUResponse', {
+                data: JSON.parse(body)
+            });
+        });
+    });
+
+    socket.on('getPriceIntermarche', async (gtin, zipcode) => {
+        request('http://localhost:9091/' + gtin + '/price/intermarche/' + zipcode, (error, response, body) => {
+            if(error) {
+                socket.emit('getPriceIntermarcheResponse', {
+                    error: error
+                });
+                return;
+            }
+            socket.emit('getPriceIntermarcheResponse', {
+                data: JSON.parse(body)
+            });
+        });
+    });
 
     socket.on('disconnect', () => {
         console.log(`User disconnected`);
