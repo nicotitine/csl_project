@@ -42,6 +42,7 @@ module.exports.puppeteer_imgs = async ({
         // return images;
     }, data.gtin);
 
+    // If we have found images, we return them
     if (images != null) {
         images = images.split('>');
 
@@ -55,6 +56,8 @@ module.exports.puppeteer_imgs = async ({
             return el != null;
         });;
     }
+
+    // Else, we continue scrapping
 }
 
 module.exports.puppeteer_price_carrefour = async ({
