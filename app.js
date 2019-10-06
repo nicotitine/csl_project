@@ -5,12 +5,10 @@ const io = require('socket.io')(http);
 const Product = require('./models/product.model');
 const request = require('request');
 const jsdom = require('jsdom');
-const randomUseragent = require('random-useragent')
-const parse = require('node-html-parser');
-const {
-    JSDOM
-} = jsdom;
+
 require('./db/db');
+
+var _puppeteerSocket = require('socket.io-client').connect('http://localhost:9092');
 
 app.set('view engine', 'ejs');
 app.set("views", __dirname + "/views");
@@ -56,6 +54,9 @@ app.get('/product/:id', (req, res) => {
                 }
 
                 if (data.status == 0) {
+                    request('http://localhost:9091/' + gtin + '/imgs', (error, response, body) => {
+
+                    })
                     res.render('pages/product', {
                         'product': null,
                         'error': 'Product not found on OFF (' + gtin + ')'
@@ -75,7 +76,7 @@ app.get('/product/:id', (req, res) => {
                     'quantity': product.quantity
                 });
 
-                console.log(productPersist);
+                //console.log(productPersist);
 
                 res.render('pages/product', {
                     'product': productPersist
@@ -87,149 +88,133 @@ app.get('/product/:id', (req, res) => {
     })
 });
 
-io.on('connection', (socket) => {
-    console.log(`New user connected`);
-    var headers = {
-        'Host': 'www.carrefour.fr',
-        'User-Agent': randomUseragent.getRandom(),
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3',
-        'Referer': ' https://www.carrefour.fr/',
-        'DNT': 1,
-        'Connection': 'keep-alive',
-        'Cookie': 'datadome=8QdOZ1j8x78_NFiYcSgUqx-baDxyNGIXsY18_.8row2umtIlEViugIWGWmxsOeJ2bvELKR1AVRS3j-MwVgRgAa3ZS0it3h6HvIl1jrw3aX; Path=/; Domain=.carrefour.fr; Expires=Tue, 22-Sep-2020 01:30:29 GMT; Max-Age=31536000',
-        'Upgrade-Insecure-Requests': 1,
-        'Cache-Control': 'max-age=0',
-        'TE': 'Trailers'
-    }
-    socket.on('requestAdditionalInfos', (requestParams) => {
-        // request({
-        //     headers: headers,
-        //     uri: 'https://www.carrefour.fr/s?q=' + requestParams.gtin
-        // }, (error, response, body) => {
-        //     const firstDom = new JSDOM(body);
+/**
+ * Send back the response to the client.
+ * @param {Object} data is the response from the puppeteer server. Contains images urls as an Array and the client socker id.
+ */
+_puppeteerSocket.on('getImagesResponse', async (data) => {
 
-        //     console.log(firstDom.window.document.querySelector("body"));
-        //     request({
-        //         headers: headers,
-        //         uri: 'https://www.carrefour.fr' + firstDom.window.document.querySelector("body main #products section .product-list > ul article .ds-product-card--vertical-infos a").href
-        //     }, (error, response, body) => {
-        //         const dom = new JSDOM(body, { runScripts: "dangerously" });
+    // We can now respond to the client
+    io.to(data.id).emit('getImagesResponse', data.data);
 
+    // Persistence will occur here 
+});
 
-        //         let price = dom.window.document.querySelector('body main .pdp__wrapper .pdp__main .main-details .main-details__wrap .main-details__right .main-details__pricing .product-card-price__price--final').innerHTML.replace('\n', '').trim();
-        //         let price_kg = dom.window.document.querySelector('body main .pdp__wrapper .pdp__main .main-details .main-details__wrap .main-details__right .main-details__pricing-left > .ds-body-text').innerHTML.replace('\n', '').trim();
-        //         let images = dom.window.ONECF_INITIAL_STATE.search.data.attributes.images;
-        //         let finalImages = [];
+_puppeteerSocket.on('getPriceCarrefourResponse', async (data) => {
+    console.log('responding to client ' + data);
+    
+    // We can now respond to the client
+    io.to(data.id).emit('getPriceCarrefourResponse', data.data);
 
-        //         images.forEach((image) => {
-        //             finalImages.push('https://carrefour.fr' + image.largest)
-        //         });
+    // Persistance will occur here
+})
 
+/**
+ * Occurs when a new user (new tab, new window, page reloading, ...) connects.
+ * Every event from the user is listened with socket.on('event', ...).
+ * @param {Object} socket is the new client socket.
+ */
+io.on('connection', async (socket) => {
 
+    console.log('User connected');
 
-        //         socket.emit('responseAdditionalInfos', [{
-        //             retailer: 'Carrefour',
-        //             data: {price: price,
-        //                 price_kg: price_kg,
-        //                 images: finalImages
-        //             }
-        //         }]);
-
-        //     });
-        // });
-        request('http://localhost:9091/' + requestParams.gtin + '/carrefour', (error, response, body) => {
-            console.log(JSON.parse(body));
-            socket.emit('responseAdditionalInfos', JSON.parse(body));
-        });
-    });
-
+    /**
+     * Request from client to get images for a product.
+     * @param {String} gtin is the worldwide product identifier.
+     * @param {Function} callback is the response function executed by the client.
+     */
     socket.on('getImages', async (gtin) => {
-        request('http://localhost:9091/' + gtin + '/imgs', (error, response, body) => {
-            if (error) {
-                socket.emit('getImagesReponse', {
-                    error: error
-                });
-                return;
-            }
-            socket.emit('getImagesResponse', {
-                data: JSON.parse(body)
-            });
+
+        console.log('Requesting from ' + socket.id);
+
+        // Tell the puppeteer server to search
+        _puppeteerSocket.emit('getImages', {
+            data: gtin,
+            id: socket.id
         });
     });
 
-    socket.on('getPriceCarrefour', async (gtin) => {
-        request('http://localhost:9091/' + gtin + '/price/carrefour', (error, response, body) => {
-            if (error) {
-                socket.emit('getPriceCarrefourResponse', {
-                    error: error
-                });
-                return;
-            }
-            socket.emit('getPriceCarrefourResponse', {
-                data: JSON.parse(body)
-            })
+    socket.on('getPriceCarrefour', async(gtin) => {
+        console.log('Requesting carrefour price ' + socket.id);
+        
+        _puppeteerSocket.emit('getPriceCarrefour', {
+            data: gtin,
+            id: socket.id
         });
     });
 
-    socket.on('getPriceAuchan', async (gtin, zipcode) => {
-        request('http://localhost:9091/' + gtin + '/price/auchan/' + zipcode, (error, response, body) => {
-            if (error) {
-                socket.emit('getPriceAuchanResponse', {
-                    error: error
-                });
-                return;
-            }
-            socket.emit('getPriceAuchanResponse', {
-                data: JSON.parse(body)
-            })
-        });
-    });
+    // socket.on('getPriceCarrefour', async (gtin) => {
+    //     request('http://localhost:9091/' + gtin + '/price/carrefour', (error, response, body) => {
+    //         if (error) {
+    //             socket.emit('getPriceCarrefourResponse', {
+    //                 error: error
+    //             });
+    //             return;
+    //         }
+    //         socket.emit('getPriceCarrefourResponse', {
+    //             data: JSON.parse(body)
+    //         })
+    //     });
+    // });
 
-    socket.on('getPriceLeclerc', async (gtin, zipcode) => {
-        request('http://localhost:9091/' + gtin + '/price/leclerc/' + zipcode, (error, response, body) => {
-            if (error) {
-                socket.emit('getPriceLeclercResponse', {
-                    error: error
-                });
-                return;
-            }
-            socket.emit('getPriceLeclercResponse', {
-                data: JSON.parse(body)
-            });
-        })
-    });
+    // socket.on('getPriceAuchan', async (gtin, zipcode) => {
+    //     request('http://localhost:9091/' + gtin + '/price/auchan/' + zipcode, (error, response, body) => {
+    //         if (error) {
+    //             socket.emit('getPriceAuchanResponse', {
+    //                 error: error
+    //             });
+    //             return;
+    //         }
+    //         socket.emit('getPriceAuchanResponse', {
+    //             data: JSON.parse(body)
+    //         })
+    //     });
+    // });
 
-    socket.on('getPriceMagasinsU', async (gtin, zipcode) => {
-        request('http://localhost:9091/' + gtin + '/price/magasinsu/' + zipcode, (error, response, body) => {
-            if(error) {
-                socket.emit('getPriceMagasinsUResponse', {
-                    error: error
-                });
-                return;
-            }
-            socket.emit('getPriceMagasinsUResponse', {
-                data: JSON.parse(body)
-            });
-        });
-    });
+    // socket.on('getPriceLeclerc', async (gtin, zipcode) => {
+    //     request('http://localhost:9091/' + gtin + '/price/leclerc/' + zipcode, (error, response, body) => {
+    //         if (error) {
+    //             socket.emit('getPriceLeclercResponse', {
+    //                 error: error
+    //             });
+    //             return;
+    //         }
+    //         socket.emit('getPriceLeclercResponse', {
+    //             data: JSON.parse(body)
+    //         });
+    //     })
+    // });
 
-    socket.on('getPriceIntermarche', async (gtin, zipcode) => {
-        request('http://localhost:9091/' + gtin + '/price/intermarche/' + zipcode, (error, response, body) => {
-            if(error) {
-                socket.emit('getPriceIntermarcheResponse', {
-                    error: error
-                });
-                return;
-            }
-            socket.emit('getPriceIntermarcheResponse', {
-                data: JSON.parse(body)
-            });
-        });
-    });
+    // socket.on('getPriceMagasinsU', async (gtin, zipcode) => {
+    //     request('http://localhost:9091/' + gtin + '/price/magasinsu/' + zipcode, (error, response, body) => {
+    //         if(error) {
+    //             socket.emit('getPriceMagasinsUResponse', {
+    //                 error: error
+    //             });
+    //             return;
+    //         }
+    //         socket.emit('getPriceMagasinsUResponse', {
+    //             data: JSON.parse(body)
+    //         });
+    //     });
+    // });
+
+    // socket.on('getPriceIntermarche', async (gtin, zipcode) => {
+    //     request('http://localhost:9091/' + gtin + '/price/intermarche/' + zipcode, (error, response, body) => {
+    //         if(error) {
+    //             socket.emit('getPriceIntermarcheResponse', {
+    //                 error: error
+    //             });
+    //             return;
+    //         }
+    //         socket.emit('getPriceIntermarcheResponse', {
+    //             data: JSON.parse(body)
+    //         });
+    //     });
+    // });
 
     socket.on('disconnect', () => {
-        console.log(`User disconnected`);
+        socket.disconnect();
     });
 });
 

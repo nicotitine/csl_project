@@ -279,7 +279,7 @@ async function puppeteer_imgs(gtin) {
     await page.type('input[name="q"]', gtin + ' carrefour\n', {
         delay: 20
     });
-    await page.waitFor(1000);
+    await page.waitFor(1500);
 
     const images = await page.evaluate((gtin) => {
         let divs = document.querySelectorAll('div[jscontroller="Q7Rsec"]');
@@ -290,23 +290,23 @@ async function puppeteer_imgs(gtin) {
         for (var i = 0; i < divs.length; i++) {
             if (divs[i].querySelector('div[class="nJGrxf FnqxG"] span').innerHTML.includes("carrefour.fr")) {
                 let src = divs[i].querySelector('a').href;
-                divs[i].querySelector('a').click();
-                console.log(src);
 
                 let params = src.split('&')
-                let finalSrc = params[0].split('=')[1].replace(/%3A/gi, ':').replace(/%2F/gi, '/')
-                finalSrc = finalSrc.substring(0, finalSrc.indexOf('%'));
-                console.log(finalSrc);
+                let finalSrc = params[0].split('=')[1];
+  
+                finalSrc = decodeURIComponent(finalSrc);
 
                 if (finalSrc.includes(gtin)) {
                     data.images.push(finalSrc);
                 }
+                console.log(data.images);
+                
             }
         }
         return data.images;
     }, gtin)
 
-    browser.close();
+    //browser.close();
     return images;
 }
 

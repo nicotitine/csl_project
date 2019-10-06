@@ -10,7 +10,7 @@
 
 ## Magasins U
 
-- choisir un CP coursesu.com/drive/home
+- Choisir un CP coursesu.com/drive/home
 - Cherche un produit :
   - https://www.coursesu.com/recherche?q={ean}
   - waitFor(1000)
