@@ -105,43 +105,35 @@
 
         if (variableJSON.retailers.length == 0) {
             let gtin = variableJSON.gtin;
-            var socket = io('http://localhost:9090', {'forceNew': true});
+            var socket = io('http://localhost:9090', { 'forceNew': true });
 
             socket.emit('getImages', gtin);
-            
+
             socket.on('getImagesResponse', async (data) => {
-                console.log('callback executing at ' + Date.now());
-
-                data.forEach((image) => {
-                    $('#images').append(`<img src="${image}" width="500px"/>`);
-                });
+                if (data != null) {
+                    data.forEach((image) => {
+                        $('#images').append(`<img src="${image}" width="500px"/>`);
+                    });
+                }
             });
-            // socket.on('getImagesResponse', (response) => {
-            //     console.log(response);
-            //     response.forEach((image) => {
-            //         $('#images').append(`<img src="${image}" width="500px"/>`);
-            //     });
-            // });
 
-            socket.on('getPriceAuchanResponse', (response) => {
-                console.log(response);
-                insertPrice(response.data)
-                // $("#prices").append(
-                //     `<li>${response.data.retailer} <small>(${response.data.drive} - ${response.data.zipcode})</small> : ${response.data.price}€</li>`
-                // );
-            });
+            socket.on('getPriceResponse', async (response) => {
+                insertPrice(response)
+            })
+
+            
 
             socket.on('getPriceLeclercResponse', (response) => {
                 console.log(response);
-                insertPrice(response.data)
+                insertPrice(response)
                 // $("#prices").append(
                 //     `<li>${response.data.retailer} <small>(${response.data.drive} - ${response.data.zipcode})</small> : ${response.data.price}€</li>`
                 // );
             });
 
-            socket.on('getPriceMagasinsUResponse', (response) => {
+            socket.on('getPriceMagasinsuResponse', (response) => {
                 console.log(response);
-                insertPrice(response.data)
+                insertPrice(response)
                 // $("#prices").append(
                 //     `<li>${response.data.retailer} <small>(${response.data.drive} - ${response.data.zipcode})</small> : ${response.data.price}€</li>`
                 // );
@@ -149,7 +141,7 @@
 
             socket.on('getPriceIntermarcheResponse', (response) => {
                 console.log(response);
-                insertPrice(response.data);
+                insertPrice(response);
             })
 
             socket.emit('getPriceCarrefour', gtin);
@@ -157,6 +149,11 @@
                 console.log(response);
                 $("#carrefourPrice").append(
                     `<li>${response.retailer} : ${response.price}€</li>`);
+            });
+
+            socket.on('getPriceAuchanResponse', (response) => {
+                console.log(response);
+                insertPrice(response)
             });
 
             $('#zipcodeForm').on('submit', (e) => {
@@ -171,9 +168,8 @@
 
                     socket.emit('getPriceAuchan', gtin, cp);
                     socket.emit('getPriceLeclerc', gtin, cp);
-                    socket.emit('getPriceMagasinsU', gtin, cp);
+                    socket.emit('getPriceMagasinsu', gtin, cp);
                     socket.emit('getPriceIntermarche', gtin, cp);
-                    socket.close();
                 }
                 $('#zipcodeForm')[0].classList.add('was-validated');
             });

@@ -42,7 +42,7 @@ app.get('/product/:id', (req, res) => {
             request('https://fr.openfoodfacts.org/api/v0/produit/' + gtin + '.json', (error, response, body) => {
 
                 let data = JSON.parse(body);
-
+        
                 // data.status.1 = found
                 // data.status.0 = not found
                 if (error || (data.status != 1 && data.status != 0)) {
@@ -101,13 +101,44 @@ _puppeteerSocket.on('getImagesResponse', async (data) => {
 });
 
 _puppeteerSocket.on('getPriceCarrefourResponse', async (data) => {
-    console.log('responding to client ' + data);
-    
+
     // We can now respond to the client
     io.to(data.id).emit('getPriceCarrefourResponse', data.data);
 
     // Persistance will occur here
+});
+
+_puppeteerSocket.on('getPriceResponse', async (data) => {
+
+    console.log(data);
+    
+
+    io.to(data.id).emit('getPriceResponse', data.data)
 })
+
+_puppeteerSocket.on('getPriceAuchanResponse', async (data) => {
+    console.log(data);
+    data.data.retailer = 'Auchan';
+    io.to(data.id).emit('getPriceAuchanResponse', data.data);
+});
+
+_puppeteerSocket.on('getPriceLeclercResponse', async (data) => {
+    console.log(data);
+    
+    io.to(data.id).emit('getPriceLeclercResponse', data.data)
+})
+
+_puppeteerSocket.on('getPriceMagasinsuResponse', async (data) => {
+
+    io.to(data.id).emit('getPriceMagasinsuResponse', data.data);
+})
+
+_puppeteerSocket.on('getPriceIntermarcheResponse', async (data) => {
+
+    io.to(data.id).emit('getPriceIntermarcheResponse', data.data)
+})
+
+
 
 /**
  * Occurs when a new user (new tab, new window, page reloading, ...) connects.
@@ -134,11 +165,59 @@ io.on('connection', async (socket) => {
         });
     });
 
-    socket.on('getPriceCarrefour', async(gtin) => {
+    socket.on('getPriceCarrefour', async (gtin) => {
         console.log('Requesting carrefour price ' + socket.id);
-        
+
         _puppeteerSocket.emit('getPriceCarrefour', {
             data: gtin,
+            id: socket.id
+        });
+    });
+
+    socket.on('getPriceAuchan', async (gtin, zipcode) => {
+        console.log('Requesting auchan price ' + socket.id);
+
+        _puppeteerSocket.emit('getPriceAuchan', {
+            data: {
+                gtin: gtin,
+                zipcode: zipcode
+            },
+            id: socket.id
+        });
+    });
+
+    socket.on('getPriceLeclerc', async (gtin, zipcode) => {
+        console.log('Requesting leclerc price ' + socket.id);
+
+        _puppeteerSocket.emit('getPriceLeclerc', {
+            data: {
+                gtin: gtin,
+                zipcode: zipcode
+            },
+            id: socket.id
+        });
+    });
+
+    socket.on('getPriceMagasinsu', async (gtin, zipcode) => {
+        console.log('Requesting magasins-u price ' + socket.id);
+
+        _puppeteerSocket.emit('getPriceMagasinsu', {
+            data: {
+                gtin: gtin,
+                zipcode: zipcode
+            },
+            id: socket.id
+        }); 
+    });
+
+    socket.on('getPriceIntermarche', async (gtin, zipcode) => {
+        console.log('Requesting intermarche price ' + socket.id);
+
+        _puppeteerSocket.emit('getPriceIntermarche', {
+            data: {
+                gtin: gtin,
+                zipcode: zipcode
+            },
             id: socket.id
         });
     });
