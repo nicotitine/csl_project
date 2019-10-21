@@ -35,7 +35,7 @@ const main = async () => {
         maxConcurrency: cpuCount
     });
 
-    console.log(`Puppeteer cluster launching with ${cpuCount} worker(s) and ${delay} ms of delay`);
+    console.log(`Puppeteer cluster launched with ${cpuCount} worker(s) and ${delay} ms of delay`);
 };
 
 
@@ -45,117 +45,188 @@ const main = async () => {
  * @param {Object} socket is the new server socket.
  */
 io.on("connection", function (socket) {
+
     /**
      * Request from the server to get images for a product.
-     * @param {Object} params contains the product gtin and the client socket id
+     * @param {Object} params contains the product gtin and the user socket id
      */
     socket.on('getImages', async (params) => {
 
         /**
-         * Executes a new task : search images for a product.
-         * We have to wait the function cluster.execute() to be done to send back the data
-         * @param {Object} Object is the data we send to the puppeteer function.
-         * @param {Function} Scrapping.puppeteer_imgs is the puppeteer function
-         */
-        let images = await cluster.execute({
-            gtin: params.data,
-            retailer: 'Carrefour',
+         * Execute puppeteer_imgs function in background. We wait the execution to be complete.
+         * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, delay)
+         * @param {Function} Scrapping.puppeteer_imgs is the function executed by the puppeteer cluster
+         * @returns {Object} contains valuable data scrapped using puppeteer  
+         */         
+        const dataPuppeteer = {
+            gtin: params.data.gtin,
             delay: delay
-        }, Scrapping.puppeteer_imgs);
-        console.log(images);
+        }
+        const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_imgs);        
 
         /**
-         * Send back the data to the server
-         * @param {Object} Object is the data srapped with puppeteer
+         * Send the scrapped data to the central server. Wich will persist data and send it back to the final user
+         * @param {String} message is the socket message
+         * @param {Object} finalData contains scrapped data and the final user socket id
          */
-        socket.emit('getImagesResponse', {
-            data: images,
+        const finalData = {
+            data: result,
             id: params.id
-        });
-
+        }
+        socket.emit('getImagesResponse', finalData);
     });
 
+    /**
+     * Request from the server to get the carrefour price for a product.
+     * @param {Object} params contains the product gtin and the user socket id
+     */
     socket.on('getPriceCarrefour', async (params) => {
 
-
-        let price = await cluster.execute({
-            gtin: params.data,
-            retailer: 'Carrefour',
+         /**
+         * Execute puppeteer_price_carrefour function in background. We wait the execution to be complete.
+         * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, zipcode, delay)
+         * @param {Function} Scrapping.puppeteer_price_carrefour is the function executed by the puppeteer cluster
+         * @returns {Object} contains valuable data scrapped using puppeteer  
+         */         
+        const dataPuppeteer = {
+            gtin: params.data.gtin,
             delay: delay
-        }, Scrapping.puppeteer_price_carrefour);
+        }
+        const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_price_carrefour);
 
-        socket.emit('getPriceCarrefourResponse', {
-            data: {
-                price: price,
-                retailer: 'Carrefour'
-            },
+        /**
+         * Send the scrapped data to the central server. Wich will persist data and send it back to the final user
+         * @param {String} message is the socket message
+         * @param {Object} finalData contains scrapped data and the final user socket id
+         */
+        const finalData = {
+            data: result,
             id: params.id
-        });
+        }
+        socket.emit('getPriceCarrefourResponse', finalData);
     });
 
+    /**
+     * Request from the server to get the auchan price for a product.
+     * @param {Object} params contains the product gtin, the zipcode given by the user and the user socket id
+     */
     socket.on('getPriceAuchan', async (params) => {
 
-        let price = await cluster.execute({
+        /**
+         * Execute puppeteer_price_auchan function in background. We wait the execution to be complete.
+         * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, zipcode, delay)
+         * @param {Function} Scrapping.puppeteer_price_auchan is the function executed by the puppeteer cluster
+         * @returns {Object} contains valuable data scrapped using puppeteer  
+         */
+        const dataPuppeteer = {
             gtin: params.data.gtin,
             zipcode: params.data.zipcode,
-            retailer: 'Auchan',
             delay: delay
-        }, Scrapping.puppeteer_price_auchan);
+        }
+        const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_price_auchan);
 
-        console.log(price);
-
-        console.log('send back auchan');
-
-        socket.emit('getPriceResponse', {
-            data: price,
-            retailer: 'Auchan',
+        /**
+         * Send the scrapped data to the central server. Wich will persist data and send it back to the final user
+         * @param {String} message is the socket message
+         * @param {Object} finalData contains scrapped data and the final user socket id
+         */
+        const finalData = {
+            data: result,
             id: params.id
-        });
+        }
+        socket.emit('getPriceResponse', finalData);
     });
 
+    /**
+     * Request from the server to get the leclerc price for a product.
+     * @param {Object} params contains the product gtin, the zipcode given by the user and the user socket id
+     */
     socket.on('getPriceLeclerc', async (params) => {
 
-        let data = await cluster.execute({
+        /**
+         * Execute puppeteer_price_leclerc function in background. We wait the execution to be complete.
+         * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, zipcode, delay)
+         * @param {Function} Scrapping.puppeteer_price_leclerc is the function executed by the puppeteer cluster
+         * @returns {Object} contains valuable data scrapped using puppeteer  
+         */
+        const dataPuppeteer = {
             gtin: params.data.gtin,
             zipcode: params.data.zipcode,
-            retailer: 'Leclerc',
             delay: delay
-        }, Scrapping.puppeteer_price_leclerc);
+        }
+        const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_price_leclerc);
 
-        socket.emit('getPriceResponse', {
-            data: data,
-            retailer: 'Leclerc',
+        /**
+         * Send the scrapped data to the central server. Wich will persist data and send it back to the final user
+         * @param {String} message is the socket message
+         * @param {Object} finalData contains scrapped data and the final user socket id
+         */
+        const finalData = {
+            data: result,
             id: params.id
-        });
+        }
+        socket.emit('getPriceResponse', finalData);
     });
 
+    /**
+     * Request from the server to get the magasins-u price for a product.
+     * @param {Object} params contains the product gtin, the zipcode given by the user and the user socket id
+     */
     socket.on('getPriceMagasinsu', async (params) => {
-        let data = await cluster.execute({
+
+        /**
+         * Execute puppeteer_price_magasinsu function in background. We wait the execution to be complete.
+         * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, zipcode, delay)
+         * @param {Function} Scrapping.puppeteer_price_magasinsu is the function executed by the puppeteer cluster
+         * @returns {Object} contains valuable data scrapped using puppeteer  
+         */
+        const dataPuppeteer = {
             gtin: params.data.gtin,
             zipcode: params.data.zipcode,
-            retailer: 'Magasins-U',
             delay: delay
-        }, Scrapping.puppeteer_price_magasinsu);
+        }
+        const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_price_magasinsu);
 
-        socket.emit('getPriceResponse', {
-            data: data,
-            retailer: 'Magasins-U',
+        /**
+         * Send the scrapped data to the central server. Wich will persist data and send it back to the final user
+         * @param {String} message is the socket message
+         * @param {Object} finalData contains scrapped data and the final user socket id
+         */
+        const finalData = {
+            data: result,
             id: params.id
-        });
+        }
+        socket.emit('getPriceResponse', finalData);
     });
 
+    /**
+     * Request from the server to get the intermarche price for a product.
+     * @param {Object} params contains the product gtin, the zipcode given by the user and the user socket id
+     */
     socket.on('getPriceIntermarche', async (params) => {
-        let data = await cluster.execute({
+        
+        /**
+         * Execute puppeteer_price_intermarche function in background. We wait the execution to be complete.
+         * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, zipcode, delay)
+         * @param {Function} Scrapping.puppeteer_price_intermarche is the function executed by the puppeteer cluster
+         * @returns {Object} contains valuable data scrapped using puppeteer  
+         */
+        const dataPuppeteer = {
             gtin: params.data.gtin,
             zipcode: params.data.zipcode,
-            retailer: 'Intermarche',
             delay: delay
-        }, Scrapping.puppeteer_price_intermarche);
+        }
+        const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_price_intermarche);
 
-        socket.emit('getPriceResponse', {
-            data: data,
-            retailer: 'Intermarche',
+        /**
+         * Send the scrapped data to the central server. Wich will persist data and send it back to the final user
+         * @param {String} message is the socket message
+         * @param {Object} finalData contains scrapped data and the final user socket id
+         */
+        const finalData = {
+            data: result,
             id: params.id
-        });
+        }
+        socket.emit('getPriceResponse', finalData);
     });
 });
