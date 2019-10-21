@@ -5,34 +5,35 @@
  * @param {Object} data contains the usefull parameters (gtin).
  * @returns {Object} contains valuable data scrapped using puppeteer.
  */
-async function puppeteer_imgs({page, data}) {   
+async function puppeteer_imgs({page, data}) {
+
     /**
-     * Defines page user agent
+     * Defines page user agent.
      */
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0');
     
     /**
-     * Goes to google.com
+     * Goes to google.com.
      */
     await page.goto('https://google.com');
 
     /**
-     * Wait for the main input to be loaded
+     * Wait for the main input to be loaded.
      */
     await page.waitForSelector('input[name="q"]');
 
     /**
-     * Type the gtin in the main input and simulate an "Enter key press" using "\n"
+     * Type the gtin in the main input and simulates an "Enter key press" using "\n".
      */
     await page.type('input[name="q"]', data.gtin + '\n', {
         delay: 20
     });
 
     /**
-     * Wait for the results to be displayed
+     * Wait for the results to be displayed.
      * We need try - catch here. If the timeout is hit, it throws an error we have to handle.
-     * In this case, if the timeout is hit, we return null
-     * This selector matches with the google built-in preview mod images
+     * In this case, if the timeout is hit, we return null.
+     * This selector matches with the google built-in preview mod images.
      */
     try {
         await page.waitForSelector('div[class="pla-ikpd__modal"] div[class="IY0jUb"]', {timeout: data.delay * 5});
@@ -44,7 +45,7 @@ async function puppeteer_imgs({page, data}) {
      * Evaluate the page if there is any result. Evaluation allows us to read HTML node values.
      * We check if google give us any result.
      * They all stored in a div. Google doen't allow us to access those image attributes (such as src).
-     * So we return the innerHTML of the parent and manualy compute the result
+     * So we return the innerHTML of the parent and manualy compute the result.
      */
     const parent = await page.evaluate(() => {
         var imagesParent = document.querySelector('div[class="pla-ikpd__modal"] div[class="IY0jUb"]');
@@ -84,31 +85,31 @@ async function puppeteer_imgs({page, data}) {
      */
     if (parent != null) {
         /**
-         * get an array of img HTML nodes
+         * get an array of img HTML nodes.
          */
         let images = parent.split('>');
 
         /**
-         * Better use for instead of forEach because of async issues
-         * Example : '<img class="foo bar" src="http://foo.bar" alt="Foo Bar">'
+         * Better use for instead of forEach because of async issues.
+         * Example : '<img class="foo bar" src="http://foo.bar" alt="Foo Bar">'.
          */
         for (let i = 0; i < images.length; i++) {
             /**
-             * Example : 'http://foo.bar" alt="Foo Bar>"'
+             * Example : 'http://foo.bar" alt="Foo Bar>"'.
              */
             images[i] = images[i].split('src="')[1];
             if (images[i] != null) {
                 /**
-                 * Example : 'http://foo.bar'
+                 * Example : 'http://foo.bar'.
                  */
                 images[i] = images[i].split('"')[0];
             }
 
         }
         /**
-         * Some google imgs don't have any src attribute. In this case, the upper computation
+         * Some google imgs don't have any src attribute. In this case, the upper computation.
          * will set images[i] at false.
-         * Here we filter the array to delete any null element and return the array
+         * Here we filter the array to delete any null element and return the array.
          */
         return images.filter(function (el) {
             return el != null;
@@ -317,7 +318,7 @@ async function puppeteer_price_auchan({page, data}) {
      */
     try {
         /**
-         * Types the auchan id in the input and simulate an "Enter key press" using "\n"
+         * Types the auchan id in the input and simulates an "Enter key press" using "\n"
          */
         await page.type('input[id="search-input"]', auchanID + '\n', {
             delay: 20
@@ -329,7 +330,7 @@ async function puppeteer_price_auchan({page, data}) {
          */
         try {
             /**
-             * Types the auchan id in the input and simulate an "Enter key press" using "\n"
+             * Types the auchan id in the input and simulates an "Enter key press" using "\n"
              */
             await page.type('form[id="search"] input', auchanID + '\n', {
                 delay: 20
@@ -489,7 +490,7 @@ async function puppeteer_price_leclerc({page, data}) {
     await page.waitForSelector('input[id="txtWPAD344_RechercheDrive"]')
 
     /**
-     * Types the zipcode in the zipcode input and simulate an "Enter key press" using "\n".
+     * Types the zipcode in the zipcode input and simulates an "Enter key press" using "\n".
      */
     await page.type('input[id="txtWPAD344_RechercheDrive"]', data.zipcode + '\n', {
         delay: 20
@@ -511,7 +512,7 @@ async function puppeteer_price_leclerc({page, data}) {
     await page.waitFor('#divWPAD337_GoogleMaps > div > div > div:nth-child(1) > div:nth-child(3) > div > div:nth-child(3) > div');
 
     /**
-     * Leclerc is using an iFrame so we need to simulate a click while evaluating.
+     * Leclerc is using an iFrame so we need to simulates a click while evaluating.
      */
     await page.evaluate(() => {
         let divs = document.querySelector('#divWPAD337_GoogleMaps > div > div > div:nth-child(1) > div:nth-child(3) > div > div:nth-child(3)').childNodes;
@@ -673,7 +674,7 @@ async function puppeteer_price_magasinsu({page, data}) {
     await page.waitForSelector('input[id="q"]');
 
     /**
-     * Types the gtin in the main input and simulate an "Enter key press" using "\n".
+     * Types the gtin in the main input and simulates an "Enter key press" using "\n".
      */
     await page.type('input[id="q"]', data.gtin + '\n', {
         delay: 20
