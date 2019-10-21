@@ -1,4 +1,4 @@
 # ToDo List
 
 ## Images
-  [ ] Continue searching after Google result
+  [x] Continue searching after Google result
