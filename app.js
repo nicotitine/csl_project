@@ -21,7 +21,6 @@ app.get('/', (req, res) => {
 });
 
 app.get('/products/', (req, res) => {
-    var products = [];
     Product.find({}, (err, products) => {
         res.render('pages/products', {
             'products': products
@@ -42,7 +41,7 @@ app.get('/product/:id', (req, res) => {
             request('https://fr.openfoodfacts.org/api/v0/produit/' + gtin + '.json', (error, response, body) => {
 
                 let data = JSON.parse(body);
-        
+
                 // data.status.1 = found
                 // data.status.0 = not found
                 if (error || (data.status != 1 && data.status != 0)) {
@@ -54,9 +53,6 @@ app.get('/product/:id', (req, res) => {
                 }
 
                 if (data.status == 0) {
-                    request('http://localhost:9091/' + gtin + '/imgs', (error, response, body) => {
-
-                    })
                     res.render('pages/product', {
                         'product': null,
                         'error': 'Product not found on OFF (' + gtin + ')'
@@ -82,7 +78,7 @@ app.get('/product/:id', (req, res) => {
                     'product': productPersist
                 });
 
-                //productPersist.save();
+                productPersist.save();
             });
         }
     })
@@ -94,18 +90,40 @@ app.get('/product/:id', (req, res) => {
  */
 _puppeteerSocket.on('getImagesResponse', async (data) => {
 
+    Product.findOneAndUpdate({gtin: data.data.gtin}, {images: data.data.images}, (err, product) => {
+    })
+    
+
     // We can now respond to the client
     io.to(data.id).emit('getImagesResponse', data.data);
 
     // Persistence will occur here 
 });
 
-_puppeteerSocket.on('getPriceCarrefourResponse', async (data) => {
-
+_puppeteerSocket.on('getPriceCarrefourResponse', async (data) => {  
+    console.log(data.data);
+    
     // We can now respond to the client
     io.to(data.id).emit('getPriceCarrefourResponse', data.data);
 
     // Persistance will occur here
+    if(data.data.found) {
+        Product.findOne({gtin: data.data.gtin}, (err, product) => {
+
+            const carrefour = product.retailers.find((retailer) => {
+                return retailer.name == 'Carrefour'
+            })
+
+            if(!carrefour) {
+                product.retailers.push({
+                    name: 'Carrefour',
+                    globalPrice: data.data.price
+                })
+            }
+
+            product.save();
+        })
+    }
 });
 
 _puppeteerSocket.on('getPriceResponse', async (data) => {

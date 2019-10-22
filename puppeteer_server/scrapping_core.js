@@ -8,6 +8,14 @@
 async function puppeteer_imgs({page, data}) {
 
     /**
+     * The default data we send back to the server
+     */
+    let result = {
+        gtin: data.gtin,
+        images: []
+    }
+
+    /**
      * Defines page user agent.
      */
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0');
@@ -32,13 +40,13 @@ async function puppeteer_imgs({page, data}) {
     /**
      * Wait for the results to be displayed.
      * We need try - catch here. If the timeout is hit, it throws an error we have to handle.
-     * In this case, if the timeout is hit, we return null.
+     * In this case, if the timeout is hit, we return the default result.
      * This selector matches with the google built-in preview mod images.
      */
     try {
         await page.waitForSelector('div[class="pla-ikpd__modal"] div[class="IY0jUb"]', {timeout: data.delay * 5});
     } catch (error) {
-        return null;
+        return result;
     }
 
     /**
@@ -103,6 +111,7 @@ async function puppeteer_imgs({page, data}) {
                  * Example : 'http://foo.bar'.
                  */
                 images[i] = images[i].split('"')[0];
+                result.images.push(images[i]);
             }
 
         }
@@ -111,9 +120,11 @@ async function puppeteer_imgs({page, data}) {
          * will set images[i] at false.
          * Here we filter the array to delete any null element and return the array.
          */
-        return images.filter(function (el) {
-            return el != null;
-        });
+        // return images.filter(function (el) {
+        //     return el != null;
+        // });
+
+        return result;
 
     }
 
@@ -266,7 +277,7 @@ async function puppeteer_price_auchan({page, data}) {
      */
     if (!auchanID) {
         return result;
-    }
+    }    
 
     /**
      * Auchan divides its drive searchs in two ways :
@@ -388,7 +399,12 @@ async function puppeteer_price_auchan({page, data}) {
         /**
          * Wait for results to be displayed
          */
-        await page.waitForSelector('p[class="price-standard"]');
+        try {
+            await page.waitForSelector('p[class="price-standard"] span[class="price-standard__decimal"]', {timeout: data.delay * 5});
+        } catch {
+            result.text = 'Product locally not found.';
+            return result;
+        }
 
         /**
          * Evaluate the page if there is any result. Evaluation allows us to read HTML node values.

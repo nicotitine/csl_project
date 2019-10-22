@@ -8,7 +8,7 @@
 <body>
 
     <header>
-        <% include ../partials/nav %>
+        <%- include('../partials/nav', {active: 'Products'}) %>
     </header>
     <br />
     <br />
@@ -54,7 +54,11 @@
             </ul>
 
             <h3>Images</h3>
-            <div id="images"></div>
+            <div id="images">
+                <% product.images.forEach((image) => { %>
+                <img src="<%= image %>" alt="Image for <%= product.name %>" width="500px" />
+                <% }) %>
+            </div>
 
             <h3>Ingredients</h3>
             <ul>
@@ -99,81 +103,98 @@
                 );
             }
         }
-        var variableJSON = JSON.parse($('#variableJSON').text());
+        var Product = JSON.parse($('#variableJSON').text());
         $('#variableJSON').remove();
-        console.log(variableJSON);
+        console.log(Product.retailers);
 
-        if (variableJSON.retailers.length == 0) {
-            let gtin = variableJSON.gtin;
-            var socket = io('http://localhost:9090', { 'forceNew': true });
 
+        let gtin = Product.gtin;
+        var socket = io('http://localhost:9090', {
+            'forceNew': true
+        });
+
+        if (Product.images.length == 0) {
             socket.emit('getImages', gtin);
-
-            socket.on('getImagesResponse', async (data) => {
-                if (data != null) {
-                    data.forEach((image) => {
-                        $('#images').append(`<img src="${image}" width="500px"/>`);
-                    });
-                }
-            });
-
-            socket.on('getPriceResponse', async (response) => {
-                insertPrice(response)
-            })
-
-            
-
-            socket.on('getPriceLeclercResponse', (response) => {
-                console.log(response);
-                insertPrice(response)
-                // $("#prices").append(
-                //     `<li>${response.data.retailer} <small>(${response.data.drive} - ${response.data.zipcode})</small> : ${response.data.price}€</li>`
-                // );
-            });
-
-            socket.on('getPriceMagasinsuResponse', (response) => {
-                console.log(response);
-                insertPrice(response)
-                // $("#prices").append(
-                //     `<li>${response.data.retailer} <small>(${response.data.drive} - ${response.data.zipcode})</small> : ${response.data.price}€</li>`
-                // );
-            })
-
-            socket.on('getPriceIntermarcheResponse', (response) => {
-                console.log(response);
-                insertPrice(response);
-            })
-
-            socket.emit('getPriceCarrefour', gtin);
-            socket.on('getPriceCarrefourResponse', (response) => {
-                console.log(response);
-                $("#carrefourPrice").append(
-                    `<li>${response.retailer} : ${response.price}€</li>`);
-            });
-
-            socket.on('getPriceAuchanResponse', (response) => {
-                console.log(response);
-                insertPrice(response)
-            });
-
-            $('#zipcodeForm').on('submit', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if ($('#zipcodeForm')[0].checkValidity() === false) {
-
-                } else {
-                    var cp = $('#zipcodeInput').val();
-                    console.log(cp);
-
-                    socket.emit('getPriceAuchan', gtin, cp);
-                    socket.emit('getPriceLeclerc', gtin, cp);
-                    socket.emit('getPriceMagasinsu', gtin, cp);
-                    socket.emit('getPriceIntermarche', gtin, cp);
-                }
-                $('#zipcodeForm')[0].classList.add('was-validated');
-            });
         }
+
+        const Carrefour = Product.retailers.find((retailer) => {
+            return retailer.name == 'Carrefour';
+        });
+
+        if(!Carrefour) {
+            socket.emit('getPriceCarrefour', gtin);
+        } else {
+            $("#carrefourPrice").append(
+                `<li>${Carrefour.name} : ${Carrefour.globalPrice}€</li>`);
+        }
+        
+        
+
+
+        socket.on('getImagesResponse', async (data) => {
+            if (data != null) {
+                data.images.forEach((image) => {
+                    $('#images').append(`<img src="${image}" width="500px"/>`);
+                });
+            }
+        });
+
+        socket.on('getPriceResponse', async (response) => {
+            insertPrice(response)
+        })
+
+
+
+        socket.on('getPriceLeclercResponse', (response) => {
+            console.log(response);
+            insertPrice(response)
+            // $("#prices").append(
+            //     `<li>${response.data.retailer} <small>(${response.data.drive} - ${response.data.zipcode})</small> : ${response.data.price}€</li>`
+            // );
+        });
+
+        socket.on('getPriceMagasinsuResponse', (response) => {
+            console.log(response);
+            insertPrice(response)
+            // $("#prices").append(
+            //     `<li>${response.data.retailer} <small>(${response.data.drive} - ${response.data.zipcode})</small> : ${response.data.price}€</li>`
+            // );
+        })
+
+        socket.on('getPriceIntermarcheResponse', (response) => {
+            console.log(response);
+            insertPrice(response);
+        })
+
+        
+        socket.on('getPriceCarrefourResponse', (response) => {
+            console.log(response);
+            $("#carrefourPrice").append(
+                `<li>${response.retailer} : ${response.price}€</li>`);
+        });
+
+        socket.on('getPriceAuchanResponse', (response) => {
+            console.log(response);
+            insertPrice(response)
+        });
+
+        $('#zipcodeForm').on('submit', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if ($('#zipcodeForm')[0].checkValidity() === false) {
+
+            } else {
+                var cp = $('#zipcodeInput').val();
+                console.log(cp);
+
+                socket.emit('getPriceAuchan', gtin, cp);
+                socket.emit('getPriceLeclerc', gtin, cp);
+                socket.emit('getPriceMagasinsu', gtin, cp);
+                socket.emit('getPriceIntermarche', gtin, cp);
+            }
+            $('#zipcodeForm')[0].classList.add('was-validated');
+        });
     </script>
 </body>
 

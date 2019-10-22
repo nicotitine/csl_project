@@ -28,6 +28,9 @@ const productSchema = mongoose.Schema({
         name: {
             type: String
         },
+        globalPrice: {
+            type: Number
+        },
         drives: [{
             location: {
                 type: String
@@ -37,9 +40,9 @@ const productSchema = mongoose.Schema({
                 minlength: 5,
                 maxlength: 5
             }],
-            price: [{
+            price: {
                 type: Number
-            }]
+            }
         }]
     }]
 })

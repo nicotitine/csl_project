@@ -3,22 +3,66 @@
 
 <head>
     <% include ../partials/head %>
+    <style>
+        @media (min-width: 576px) {
+    .card-columns {
+        column-count: 2;
+    }
+}
+
+@media (min-width: 768px) {
+    .card-columns {
+        column-count: 3;
+    }
+}
+
+@media (min-width: 992px) {
+    .card-columns {
+        column-count: 4;
+    }
+}
+
+@media (min-width: 1200px) {
+    .card-columns {
+        column-count: 5;
+    }
+}
+    </style>
 </head>
 
 <body>
 
     <header>
-        <% include ../partials/nav %>
+        <%- include('../partials/nav', {active: 'Products'}) %>
     </header>
     <br />
     <br />
-    <section class="container">
-        <div class="jumbotron">
-            <h1>This is great</h1>
-            <p>Welcome to templating using EJS</p>
+    <section class="container-flat">
+        <div class="jumbotron flat">
+            <h1 class="text-center">All our products</h1>
+            <hr>
             <span id='variableJSON' hidden>
                 <%= JSON.stringify(products); %>
             </span>
+            <div class="products card-columns">
+                <% products.forEach((product) => { %>
+                    <div class="card m-2" style="width: 18rem;">
+                            <img src="<%= product.images[0] %>" class="card-img-top d-block text-center" alt="Image not available yet.">
+                            <div class="card-body">
+                              <h5 class="card-title mb-0"><%= product.name %></h5>
+                              <small class="text-muted"><%= product.gtin %></small>
+                              <% var Carrefour = product.retailers.find((retailer) => {return retailer.name == 'Carrefour'}); %>
+                              <% if (Carrefour) { %>
+                                <p class="card-text">Carrefour : <%= Carrefour.globalPrice %>€</p>
+                              <% } else { %>
+                                <small class="text-muted d-block">Price not available yet</small>
+                              <% } %>
+                              <br/>
+                              <a href="/product/<%= product.gtin %>" class="btn btn-primary">More details</a>
+                            </div>
+                          </div>
+                <% }); %>
+            </div>
         </div>
     </section>
 
