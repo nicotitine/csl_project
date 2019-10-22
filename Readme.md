@@ -5,9 +5,12 @@
 
 ## Product
   - [ ] Persist after getting any changes from puppeteer_cluster
+    - [x] Images
+    - [x] Carrefour price
+    - [ ] Others retailer price
   - [ ] Search for product in our database using gtin
-  - [ ] Check for intermarche and magasins-u results
+  - [ ] Check for intermarche, leclerc and magasins-u results
 
 ## Products
-  - [ ] Display all of our products
+  - [x] Display all of our products (`/products/`)
   - [ ] Categorize them (?)
