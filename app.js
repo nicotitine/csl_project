@@ -8,7 +8,7 @@ const jsdom = require('jsdom');
 
 require('./db/db');
 
-var _puppeteerSocket = require('socket.io-client').connect('http://localhost:9092');
+var _puppeteerSocket = require('socket.io-client').connect('http://127.0.0.1:9091');
 
 app.set('view engine', 'ejs');
 app.set("views", __dirname + "/views");

@@ -1,7 +1,7 @@
 const {
     Cluster
 } = require('puppeteer-cluster');
-const io = require("socket.io").listen(9092);
+const io = require("socket.io").listen(process.env.PUPPETEER_PORT);
 const os = require('os')
 const cpuCount = os.cpus().length;
 const Scrapping = require('./scrapping_core');
@@ -35,7 +35,7 @@ const main = async () => {
         maxConcurrency: cpuCount
     });
 
-    console.log(`Puppeteer cluster launched with ${cpuCount} worker(s) and ${delay} ms of delay`);
+    console.log(`Puppeteer cluster launched with ${cpuCount} worker(s) and ${delay} ms of delay on port ${process.env.PUPPETEER_PORT}`);
 };
 
 
