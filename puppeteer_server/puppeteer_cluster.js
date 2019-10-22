@@ -3,7 +3,7 @@ const {
 } = require('puppeteer-cluster');
 const io = require("socket.io").listen(9092);
 const os = require('os')
-const cpuCount = 4;
+const cpuCount = os.cpus().length;
 const Scrapping = require('./scrapping_core');
 const speedTest = require('speedtest-net');
 var cluster, delay;
