@@ -52,6 +52,9 @@ io.on("connection", function (socket) {
      */
     socket.on('getImages', async (params) => {
 
+        console.log('images from puppeteer');
+        
+
         /**
          * Execute puppeteer_imgs function in background. We wait the execution to be complete.
          * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, delay).
