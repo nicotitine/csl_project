@@ -32,7 +32,8 @@ const main = async () => {
      */
     cluster = await Cluster.launch({
         concurrency: Cluster.CONCURRENCY_BROWSER,
-        maxConcurrency: cpuCount
+        maxConcurrency: cpuCount,
+        puppeteerOptions: { args: ['--no-sandbox'] }
     });
 
     console.log(`Puppeteer cluster launched with ${cpuCount} worker(s) and ${delay} ms of delay on port ${process.env.PUPPETEER_PORT}`);
