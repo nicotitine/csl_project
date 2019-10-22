@@ -3,6 +3,12 @@
 
 <head>
     <% include ../partials/head %>
+
+    <style>
+        h4 small a {
+            font-size: 0.8em;
+        }
+    </style>
 </head>
 
 <body>
@@ -15,8 +21,24 @@
     <section class="container">
         <div class="jumbotron">
             <%if (product != null) { %>
-            <h1><%= product.name %> - <%=product.quantity%> <small>(<%= product.generic_name %>)</small></h1>
-            <small><%= product.gtin %></small>
+            <h1>
+                <%= product.name %> - <%=product.quantity%>
+                <% if(locals.product.generic_name) { %>
+                    <small>
+                        (<%= product.generic_name %>)
+                    </small>
+                <% } %>
+            </h1>
+            <small class="text-muted"><%= product.gtin %></small>
+            <h4>Categories :
+                <small>
+                    <% product.categories.forEach((categorie, i) => { %>
+                    <% const encoded = encodeURI(categorie) %>
+                    <a href="/products/categories/<%= encoded %>"
+                        class="capitalize"><%= categorie %></a><% if(i < product.categories.length - 1) { %>,<% } %>
+                    <% }) %>
+                </small>
+            </h4>
             <hr />
             <h3>Prices</h3>
             <ul id="carrefourPrice">
@@ -105,7 +127,7 @@
         }
         var Product = JSON.parse($('#variableJSON').text());
         $('#variableJSON').remove();
-        console.log(Product.retailers);
+        console.log(Product);
 
 
         let gtin = Product.gtin;
@@ -121,14 +143,14 @@
             return retailer.name == 'Carrefour';
         });
 
-        if(!Carrefour) {
+        if (!Carrefour) {
             socket.emit('getPriceCarrefour', gtin);
         } else {
             $("#carrefourPrice").append(
                 `<li>${Carrefour.name} : ${Carrefour.globalPrice}€</li>`);
         }
-        
-        
+
+
 
 
         socket.on('getImagesResponse', async (data) => {
@@ -166,11 +188,13 @@
             insertPrice(response);
         })
 
-        
+
         socket.on('getPriceCarrefourResponse', (response) => {
-            console.log(response);
-            $("#carrefourPrice").append(
-                `<li>${response.retailer} : ${response.price}€</li>`);
+            if(response.found)
+                $("#carrefourPrice").append(
+                    `<li>${response.retailer} : ${response.price}€</li>`);
+            else
+                $("#carrefourPrice").append(`<li>${response.retailer} : ${response.text}</li>`)
         });
 
         socket.on('getPriceAuchanResponse', (response) => {

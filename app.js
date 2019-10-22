@@ -28,6 +28,46 @@ app.get('/products/', (req, res) => {
     })
 })
 
+app.get('/products/categories/:category', (req, res) => {
+    console.log(req.params);
+    
+    Product.find({"categories": {
+        '$regex': req.params.category,
+        '$options': 'i'
+    }}, (err, products) => {
+        console.log(products);
+        res.render('pages/products', {
+            'products': products,
+            'category': req.params.category
+        })
+        
+    })
+})
+
+app.get('/search/', (req, res) => {
+    res.render('pages/search', {});
+})
+
+app.get('/search/auto', async (req, res) => {
+    let finalProducts = []
+    const regex = new RegExp(req.query['term'], 'i');
+
+    await Product.find({name: regex}, (err, products) => {
+        for(let i = 0; i < products.length; i++) {
+            finalProducts.push(products[i])
+        }
+    })
+
+    await Product.find({gtin: regex}, (err, products) => {
+        for(let i = 0; i < products.length; i++) {
+            finalProducts.push(products[i])
+        }
+    })
+    console.log('searching');
+    
+    res.send(finalProducts)
+})
+
 app.get('/product/:id', (req, res) => {
     var gtin = req.params.id;
     Product.findOne({
@@ -60,19 +100,30 @@ app.get('/product/:id', (req, res) => {
                     return;
                 }
 
+               
+                
 
                 let product = data.product;
                 let regex = /_/gi
+
+                
+                for(let i = 0; i < product.categories_hierarchy.length; i++) {
+                    product.categories_hierarchy[i] = product.categories_hierarchy[i].split(':')[1];
+                    product.categories_hierarchy[i] = product.categories_hierarchy[i].replace(/-/gi, ' ');
+                }
+
+                console.log(product.categories_hierarchy);
 
                 let productPersist = new Product({
                     'gtin': gtin,
                     'name': product.product_name,
                     'generic_name': product.generic_name,
                     'ingredients': product.ingredients_text.replace(regex, '').split(', '),
-                    'quantity': product.quantity
+                    'quantity': product.quantity,
+                    'categories': product.categories_hierarchy
                 });
 
-                //console.log(productPersist);
+                console.log(productPersist);
 
                 res.render('pages/product', {
                     'product': productPersist

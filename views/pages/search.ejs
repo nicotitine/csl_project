@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <% include ../partials/head %>
+</head>
+
+<body>
+
+    <header>
+        <%- include('../partials/nav', {active: 'Search'}) %>
+    </header>
+    <br />
+    <br />
+    <section class="container">
+        <div class="jumbotron">
+            <h1>Search for product(s)</h1>
+            <hr>
+            <form>
+                <div class="form-group">
+                    <!-- <label for="exampleInputEmail1">Email address</label> -->
+                    <input type="email" class="form-control" id="search" aria-describedby="emailHelp"
+                        placeholder="Type for what your are looking for (gtin, name)"/>
+                    <!-- <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone -->
+                        <!-- else.</small> -->
+                </div>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+            <hr>
+            <div>
+                <h1 class="text-center">Results</h1>
+                <div class="results card-columns" id="results">
+
+                </div>
+                <div id="resultsText">
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <% include ../partials/footer %>
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.4.1.js"
+        integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
+    <script>
+        var socket = io();
+
+        function insertResult(data) {
+            $('#results').html('');
+            $('#resultsText').html('');
+            if(data.length > 0) {
+                for(let i = 0; i < data.length; i++) {
+                    $('#results').append(`
+                        <div class="card m-2" style="width: 18rem;">
+                            <img src="${data[i].images[0]}" class="card-img-top d-block text-center text-muted m-2"
+                                    alt="Image not available yet.">
+                                <div class="card-body pt-1">
+                                    <h5 class="card-title mb-0">${data[i].name}</h5>
+                                    <small class="text-muted">${data[i].gtin}</small>
+                                    <br />
+                                    <a href="/product/${data[i].gtin}" class="btn btn-primary">More details</a>
+                                </div>
+                            </div>
+                    `)
+                }
+            } else {
+                $('#resultsText').append(`<h3 class="text-center mt-4">No product found...</h3>`)
+            }
+        }
+
+        $('#search').autocomplete({
+            source: (req, res) => {
+                $.ajax({
+                    url: '/search/auto',
+                    type: 'GET',
+                    data: req,
+                    success: (data) => {
+                        insertResult(data);
+                    }
+                })
+            },
+            minLength: 1
+        })
+    </script>
+</body>
+
+</html>

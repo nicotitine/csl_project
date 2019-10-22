@@ -24,6 +24,9 @@ const productSchema = mongoose.Schema({
     quantity: {
         type: String
     },
+    categories: [{
+        type: String
+    }],
     retailers: [{
         name: {
             type: String

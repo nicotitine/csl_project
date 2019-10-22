@@ -8,9 +8,14 @@
     - [x] Images
     - [x] Carrefour price
     - [ ] Others retailer price
-  - [ ] Search for product in our database using gtin
+  - [x] Search for product in our database using gtin
   - [ ] Check for intermarche, leclerc and magasins-u results
 
 ## Products
   - [x] Display all of our products (`/products/`)
-  - [ ] Categorize them (?)
+  - [x] Categorize them
+
+## Search
+  - [x] Search for products using name
+  - [x] Search for product using gtin
+  - [ ] If gtin && no product found, let the user to scrappe
