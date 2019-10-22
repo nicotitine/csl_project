@@ -700,7 +700,7 @@ async function puppeteer_price_magasinsu({page, data}) {
      * Wait the result to be displayed. If there is no result, we return de default result.
      */
     try {
-        await page.waitForSelector('ul[id="search-result-items"] li span[class="sale-price"] span', {timeout: data.delay * 2});
+        await page.waitForSelector('ul[id="search-result-items"] li span[class="sale-price"] span', {timeout: data.delay * 5});
     } catch {
         return result;
     }
