@@ -5,6 +5,8 @@
     <% include ../partials/head %>
 
     <style>
+        @import url("https://use.fontawesome.com/releases/v5.8.1/css/all.css");
+
         h4 small a {
             font-size: 0.8em;
         }
@@ -14,9 +16,12 @@
         }
 
         section ul li:before {
-            content: "\f54f";
-            font-family: FontAwesome;
-            color: #0056b3;
+            color: #000;
+            content: '\f54f';
+            font-family: "Font Awesome 5 Free";
+            font-style: normal;
+            font-weight: normal;
+            text-decoration: inherit;
         }
     </style>
 </head>
@@ -34,12 +39,13 @@
             <h1>
                 <%= product.name %> - <%=product.quantity%>
                 <% if(locals.product.generic_name) { %>
-                    <small>
-                        (<%= product.generic_name %>)
-                    </small>
+                <small>
+                    (<%= product.generic_name %>)
+                </small>
                 <% } %>
             </h1>
-            <h3>Brand : <span class="capitalize"><a href="/products/brand/<%= product.brand %>"><%= product.brand %></a></span></h3>
+            <h3>Brand : <span class="capitalize"><a
+                        href="/products/brand/<%= product.brand %>"><%= product.brand %></a></span></h3>
             <small class="text-muted"><%= product.gtin %></small>
             <h4>Categories :
                 <small>
@@ -125,7 +131,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         console.log(`<%= locals.socket.host %>`);
-        
+
         const insertPrice = (product) => {
             if (product.found) {
                 $("#prices").append(
@@ -202,7 +208,7 @@
 
 
         socket.on('getPriceCarrefourResponse', (response) => {
-            if(response.found)
+            if (response.found)
                 $("#carrefourPrice").append(
                     `<li>${response.retailer} : ${response.price}€</li>`);
             else
