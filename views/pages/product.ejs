@@ -29,12 +29,12 @@
                     </small>
                 <% } %>
             </h1>
+            <h3>Brand : <span class="capitalize"><a href="/products/brand/<%= product.brand %>"><%= product.brand %></a></span></h3>
             <small class="text-muted"><%= product.gtin %></small>
             <h4>Categories :
                 <small>
                     <% product.categories.forEach((categorie, i) => { %>
-                    <% const encoded = encodeURI(categorie) %>
-                    <a href="/products/categories/<%= encoded %>"
+                    <a href="/products/categories/<%= categorie + '?returnLink=' + page + '&productName=' + product.name %>"
                         class="capitalize"><%= categorie %></a><% if(i < product.categories.length - 1) { %>,<% } %>
                     <% }) %>
                 </small>
@@ -131,7 +131,7 @@
 
 
         let gtin = Product.gtin;
-        var socket = io('51.83.46.109:9090', {
+        var socket = io('localhost:9090', {
             'forceNew': true
         });
 

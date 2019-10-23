@@ -4,6 +4,13 @@
 <head>
     <% include ../partials/head %>
     <style>
+        #returnLink:before {
+            content: "\f0a8";
+            font-family: FontAwesome;
+        }
+        #returnLink:hover {
+            text-decoration: none;
+        }
         @media (min-width: 576px) {
             .card-columns {
                 column-count: 2;
@@ -39,35 +46,42 @@
     <br />
     <section class="container-flat">
         <div class="jumbotron flat">
-            <% if(locals.category) { %>
-            <h1 class="text-center">All our products in <a href="" class="capitalize"><%= category %></a></h1>
-            <a class="btn btn-link" href="/products/">
-                < Back to products</a> <% } else { %> <h1 class="text-center">All our products</h1>
+            <% if(locals.returnLink) { %>
+                <h1 class="text-center">All our products in <a href="" class="capitalize"><%= category %></a></h1>
+                <a class="btn btn-link" href="<%= returnLink %>" id="returnLink">
+                    <% if(locals.productName) { %>
+                        Return to <%= productName %>
+                    <% } else {%>
+                        Return to <%= returnLink.replace('/', '') %>
                     <% } %>
-                    <hr>
-                    <span id='variableJSON' hidden>
-                        <%= JSON.stringify(products); %>
-                    </span>
-                    <div class="products card-columns">
-                        <% products.forEach((product) => { %>
-                        <div class="card m-2" style="width: 18rem;">
-                            <img src="<%= product.images[0] %>" class="card-img-top d-block text-center text-muted m-2"
-                                alt="Image not available yet.">
-                            <div class="card-body pt-1">
-                                <h5 class="card-title mb-0"><%= product.name %></h5>
-                                <small class="text-muted"><%= product.gtin %></small>
-                                <% var Carrefour = product.retailers.find((retailer) => {return retailer.name == 'Carrefour'}); %>
-                                <% if (Carrefour) { %>
-                                <p class="card-text">Carrefour : <%= Carrefour.globalPrice %>€</p>
-                                <% } else { %>
-                                <small class="text-muted d-block">Price not available yet</small>
-                                <% } %>
-                                <br />
-                                <a href="/product/<%= product.gtin %>" class="btn btn-primary">More details</a>
-                            </div>
-                        </div>
-                        <% }); %>
+                </a>
+            <% } else { %>
+                <h1 class="text-center">All our products</h1>
+            <% } %>
+            <hr>
+            <span id='variableJSON' hidden>
+                <%= JSON.stringify(products); %>
+            </span>
+            <div class="products card-columns">
+                <% products.forEach((product) => { %>
+                <div class="card m-2" style="width: 18rem;">
+                    <img src="<%= product.images[0] %>" class="card-img-top d-block text-center text-muted m-2"
+                        alt="Image not available yet.">
+                    <div class="card-body pt-1">
+                        <h5 class="card-title mb-0"><%= product.name %></h5>
+                        <small class="text-muted"><%= product.gtin %></small>
+                        <% var Carrefour = product.retailers.find((retailer) => {return retailer.name == 'Carrefour'}); %>
+                        <% if (Carrefour) { %>
+                        <p class="card-text">Carrefour : <%= Carrefour.globalPrice %>€</p>
+                        <% } else { %>
+                        <small class="text-muted d-block">Price not available yet</small>
+                        <% } %>
+                        <br />
+                        <a href="/product/<%= product.gtin %>" class="btn btn-primary">More details</a>
                     </div>
+                </div>
+                <% }); %>
+            </div>
         </div>
     </section>
 

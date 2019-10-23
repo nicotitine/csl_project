@@ -19,10 +19,9 @@
             <form>
                 <div class="form-group">
                     <!-- <label for="exampleInputEmail1">Email address</label> -->
-                    <input type="email" class="form-control" id="search" aria-describedby="emailHelp"
-                        placeholder="Type for what your are looking for (gtin, name)"/>
-                    <!-- <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone -->
-                        <!-- else.</small> -->
+                    <input type="text" class="form-control" id="search" aria-describedby="searchHelp"
+                        placeholder="gtin, brand, name"/>
+                    <small id="searchHelp" class="form-text text-muted">To scrap new product, please provide gtin.</small>
                 </div>
                 <button type="submit" class="btn btn-primary">Search</button>
             </form>
@@ -49,7 +48,7 @@
     <script>
         var socket = io();
 
-        function insertResult(data) {
+        function insertResult(data, req) {
             $('#results').html('');
             $('#resultsText').html('');
             if(data.length > 0) {
@@ -67,6 +66,14 @@
                             </div>
                     `)
                 }
+            } else if ((/^\d+$/.test(req.term)) && (req.term.length == 8 || req.term.length == 12 || req.term.length == 13 || req.term.length == 14)) {
+                $('#resultsText').append(`
+                    <h3 class="text-center text-success mt-4">This is a valid gtin code...</h3>
+                    <br/>
+                    <div class="text-center">
+                        <a href="/product/${req.term}" class="btn btn-primary">Scrap it !</a>
+                    </div>
+                    `)
             } else {
                 $('#resultsText').append(`<h3 class="text-center mt-4">No product found...</h3>`)
             }
@@ -79,7 +86,9 @@
                     type: 'GET',
                     data: req,
                     success: (data) => {
-                        insertResult(data);
+                        insertResult(data, req);
+                        console.log(req);
+                        
                     }
                 })
             },

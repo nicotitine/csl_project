@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <% include ../partials/head %>
+  <style>
+
+    ul {
+      list-style: none;
+    }
+    #categories li:before {
+      content: "\f07c";
+      font-family: FontAwesome;
+      color: #0056b3;
+    }
+    @media (min-width: 576px) {
+      .card-columns {
+        column-count: 2;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .card-columns {
+        column-count: 3;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .card-columns {
+        column-count: 4;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .card-columns {
+        column-count: 5;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <%- include('../partials/nav', {active: 'Categories'}) %>
+  </header>
+  <br />
+  <br />
+  <section class="container-flat">
+    <div class="jumbotron flat">
+      <h1>Categories</h1>
+      <hr>
+      <div class="card-columns" id="categories">
+        <% categories.forEach((category) => { %>
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title"><%= category.title %></h5>
+              <ul class="card-body mb-0">
+                <% category.data.forEach((cat) => { %>
+                <li>
+                    <a href="/products/categories/<%= cat.name%>?returnLink=<%= page %>" class="capitalize"><%= cat.name %></a>
+                </li>
+                <% }) %>
+              </ul>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <span id='variableJSON' hidden>
+        <%= JSON.stringify(categories); %>
+      </span>
+
+    </div>
+  </section>
+
+  <footer>
+    <% include ../partials/footer %>
+  </footer>
+  <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+    crossorigin="anonymous"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var variableJSON = JSON.parse($('#variableJSON').text());
+    $('#variableJSON').remove();
+    console.log(variableJSON);
+    var socket = io();
+  </script>
+</body>
+
+</html>

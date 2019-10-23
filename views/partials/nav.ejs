@@ -7,15 +7,6 @@
     
     <div class="collapse navbar-collapse" id="navbarsExample03">
         <ul class="navbar-nav mr-auto">
-            <% if (active == 'Home'){ %>
-                <li class="nav-item active">
-                    <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-                </li>
-            <% } else { %>
-                <li class="nav-item">
-                    <a class="nav-link" href="/">Home</a>
-                </li>
-            <% } %>
             <% if (active == 'Products'){ %>
                 <li class="nav-item active">
                     <a class="nav-link" href="/products/">Products <span class="sr-only">(current)</span></a>
@@ -23,6 +14,15 @@
             <% } else { %>
                 <li class="nav-item">
                     <a class="nav-link" href="/products/">Products</a>
+                </li>
+            <% } %>
+            <% if (active == 'Categories') { %>
+                <li class="nav-item active">
+                    <a class="nav-link" href="/categories">Categories <span class="sr-only">(current)</span></a>
+                </li>
+            <% } else { %>
+                <li class="nav-item">
+                    <a class="nav-link" href="/categories">Categories</a>
                 </li>
             <% } %>
             <% if (active == 'Search'){ %>

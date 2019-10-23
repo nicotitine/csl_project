@@ -3,6 +3,7 @@ const port = process.env.PORT;
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const Product = require('./models/product.model');
+const Category = require('./models/category.model');
 const request = require('request');
 const jsdom = require('jsdom');
 
@@ -29,44 +30,86 @@ app.get('/products/', (req, res) => {
 })
 
 app.get('/products/categories/:category', (req, res) => {
-    console.log(req.params);
+    const { returnLink, productName } = req.query;
+    console.log(productName);
+    
     
     Product.find({"categories": {
         '$regex': req.params.category,
         '$options': 'i'
     }}, (err, products) => {
-        console.log(products);
         res.render('pages/products', {
             'products': products,
-            'category': req.params.category
+            'category': req.params.category,
+            'page': req.url,
+            'returnLink': returnLink,
+            'productName': productName
         })
         
     })
 })
+
+app.get('/products/brand/:brand', (req, res) => {
+    Product.find({"brand": req.params.brand}, (err, products) => {
+       res.render('pages/products', {
+           'products': products,
+           'category': req.params.brand
+       })
+    })
+})
+
+app.get('/categories', async (req, res) => {
+    Category.find({}, (err, categories) => {
+        
+        categories = (() => {
+            if(categories.length == 0) {
+                return [];
+            }
+
+            return Object.values(
+                categories.reduce((acc, category) => {
+                    let firstLetter = category.name[0].toLocaleUpperCase();
+                    if(!acc[firstLetter]) {
+                        acc[firstLetter] = {title: firstLetter, data: [category]};
+                    } else {
+                        acc[firstLetter].data.push(category)
+                    }
+                    return acc
+                }, {})
+            )
+        })()
+        res.render('pages/categories', {
+            'page': req.url,
+            'categories': categories
+        });
+    });
+});
 
 app.get('/search/', (req, res) => {
     res.render('pages/search', {});
 })
 
 app.get('/search/auto', async (req, res) => {
-    let finalProducts = []
-    const regex = new RegExp(req.query['term'], 'i');
+    try {    
+        const regex = new RegExp(req.query['term'], 'i');
 
-    await Product.find({name: regex}, (err, products) => {
-        for(let i = 0; i < products.length; i++) {
-            finalProducts.push(products[i])
-        }
-    })
-
-    await Product.find({gtin: regex}, (err, products) => {
-        for(let i = 0; i < products.length; i++) {
-            finalProducts.push(products[i])
-        }
-    })
-    console.log('searching');
-    
-    res.send(finalProducts)
-})
+        await Product.find({$or: [
+            {
+                name: regex
+            }, 
+            {
+                gtin: regex
+            },
+            {
+                brand: regex
+            }
+        ]}, (err, products) => {
+            res.send(products);
+        });
+    } catch {
+        res.send()
+    }
+});
 
 app.get('/product/:id', (req, res) => {
     var gtin = req.params.id;
@@ -75,10 +118,11 @@ app.get('/product/:id', (req, res) => {
     }, (err, product) => {
         if (product) {
             res.render('pages/product', {
-                'product': product
+                'product': product,
+                'page': req.url
             });
         } else {
-            request('https://fr.openfoodfacts.org/api/v0/produit/' + gtin + '.json', (error, response, body) => {
+            request('https://fr.openfoodfacts.org/api/v0/produit/' + gtin + '.json', async (error, response, body) => {
 
                 let data = JSON.parse(body);
 
@@ -87,7 +131,8 @@ app.get('/product/:id', (req, res) => {
                 if (error || (data.status != 1 && data.status != 0)) {
                     res.render('pages/product', {
                         'product': null,
-                        'error': error
+                        'error': error,
+                        'page': req.url
                     });
                     return;
                 }
@@ -95,7 +140,8 @@ app.get('/product/:id', (req, res) => {
                 if (data.status == 0) {
                     res.render('pages/product', {
                         'product': null,
-                        'error': 'Product not found on OFF (' + gtin + ')'
+                        'error': 'Product not found on OFF (' + gtin + ')',
+                        'page': req.url
                     });
                     return;
                 }
@@ -112,7 +158,7 @@ app.get('/product/:id', (req, res) => {
                     product.categories_hierarchy[i] = product.categories_hierarchy[i].replace(/-/gi, ' ');
                 }
 
-                console.log(product.categories_hierarchy);
+ 
 
                 let productPersist = new Product({
                     'gtin': gtin,
@@ -120,16 +166,30 @@ app.get('/product/:id', (req, res) => {
                     'generic_name': product.generic_name,
                     'ingredients': product.ingredients_text.replace(regex, '').split(', '),
                     'quantity': product.quantity,
-                    'categories': product.categories_hierarchy
+                    'categories': product.categories_hierarchy,
+                    'brand': product.brands
                 });
 
                 console.log(productPersist);
 
                 res.render('pages/product', {
-                    'product': productPersist
+                    'product': productPersist,
+                    'page': req.url
                 });
 
-                productPersist.save();
+                await productPersist.save();
+
+                for(let i = 0; i < productPersist.categories.length; i++) {
+                    const category = await Category.findOne({name: productPersist.categories[i]})
+                    if(!category) {
+                        const categoryPersist = new Category({
+                            name: productPersist.categories[i]
+                        });
+
+                        await categoryPersist.save();
+                    }
+                }
+
             });
         }
     })
