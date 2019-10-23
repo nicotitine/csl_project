@@ -43,11 +43,12 @@ async function puppeteer_imgs({page, data}) {
      * In this case, if the timeout is hit, we return the default result.
      * This selector matches with the google built-in preview mod images.
      */
-    try {
-        await page.waitForSelector('div[class="pla-ikpd__modal"] div[class="IY0jUb"]', {timeout: data.delay * 5});
-    } catch (error) {
-        return result;
-    }
+console.log('trying image puppeteer');
+  await page.waitFor(5000);
+await page.screenshot({path: 'screen-google.png'});
+        await page.waitForSelector('div[class="pla-ikpd__modal"] div[class="IY0jUb"]');
+  
+console.log('passing image puppeteer');
 
     /**
      * Evaluate the page if there is any result. Evaluation allows us to read HTML node values.
