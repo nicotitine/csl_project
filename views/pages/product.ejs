@@ -5,8 +5,6 @@
     <% include ../partials/head %>
 
     <style>
-        @import url("https://use.fontawesome.com/releases/v5.8.1/css/all.css");
-
         h4 small a {
             font-size: 0.8em;
         }
@@ -14,7 +12,6 @@
         section ul {
             list-style: none;
         }
-
     </style>
 </head>
 
@@ -31,13 +28,12 @@
             <h1>
                 <%= product.name %> - <%=product.quantity%>
                 <% if(locals.product.generic_name) { %>
-                <small>
-                    (<%= product.generic_name %>)
-                </small>
+                    <small>
+                        (<%= product.generic_name %>)
+                    </small>
                 <% } %>
             </h1>
-            <h3>Brand : <span class="capitalize"><a
-                        href="/products/brand/<%= product.brand %>"><%= product.brand %></a></span></h3>
+            <h3>Brand : <span class="capitalize"><a href="/products/brand/<%= product.brand %>"><%= product.brand %></a></span></h3>
             <small class="text-muted"><%= product.gtin %></small>
             <h4>Categories :
                 <small>
@@ -123,15 +119,15 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         console.log(`<%= locals.socket.host %>`);
-
+        
         const insertPrice = (product) => {
             if (product.found) {
                 $("#prices").append(
-                    `<span color="#0056b3"><i class="fas fa-store"></i></span><li>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.price}€</li>`
+                    `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.price}€</li>`
                 );
             } else {
                 $("#prices").append(
-                    `<span color="#0056b3"><i class="fas fa-store"></i></span><li>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.text}</li>`
+                    `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.text}</li>`
                 );
             }
         }
@@ -157,7 +153,7 @@
             socket.emit('getPriceCarrefour', gtin);
         } else {
             $("#carrefourPrice").append(
-                `<span color="#0056b3"><i class="fas fa-store"></i></span><li>${Carrefour.name} : ${Carrefour.globalPrice}€</li>`);
+                `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${Carrefour.name} : ${Carrefour.globalPrice}€</li>`);
         }
 
 
@@ -200,11 +196,11 @@
 
 
         socket.on('getPriceCarrefourResponse', (response) => {
-            if (response.found)
+            if(response.found)
                 $("#carrefourPrice").append(
-                    `<span color="#0056b3"><i class="fas fa-store"></i></span><li>${response.retailer} : ${response.price}€</li>`);
+                    `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${response.retailer} : ${response.price}€</li>`);
             else
-                $("#carrefourPrice").append(`<span color="#0056b3"><i class="fas fa-store"></i></span><li>${response.retailer} : ${response.text}</li>`)
+                $("#carrefourPrice").append(`<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${response.retailer} : ${response.text}</li>`)
         });
 
         socket.on('getPriceAuchanResponse', (response) => {
