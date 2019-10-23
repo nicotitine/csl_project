@@ -112,14 +112,20 @@ app.get('/search/auto', async (req, res) => {
 });
 
 app.get('/product/:id', (req, res) => {
-    var gtin = req.params.id;
+    const gtin = req.params.id;
+    const socket = {
+        host: process.env.CLIENT_SOCKET_HOST,
+        port: process.env.PORT
+    };
+
     Product.findOne({
         'gtin': gtin
     }, (err, product) => {
         if (product) {
             res.render('pages/product', {
-                'product': product,
-                'page': req.url
+                product: product,
+                page: req.url,
+                socket: socket
             });
         } else {
             request('https://fr.openfoodfacts.org/api/v0/produit/' + gtin + '.json', async (error, response, body) => {
@@ -130,18 +136,20 @@ app.get('/product/:id', (req, res) => {
                 // data.status.0 = not found
                 if (error || (data.status != 1 && data.status != 0)) {
                     res.render('pages/product', {
-                        'product': null,
-                        'error': error,
-                        'page': req.url
+                        product: null,
+                        error: error,
+                        page: req.url,
+                        socket: socket
                     });
                     return;
                 }
 
                 if (data.status == 0) {
                     res.render('pages/product', {
-                        'product': null,
-                        'error': 'Product not found on OFF (' + gtin + ')',
-                        'page': req.url
+                        error: 'Product not found on OFF (' + gtin + ')',
+                        product: null,
+                        page: req.url,
+                        socket: socket
                     });
                     return;
                 }
@@ -173,8 +181,9 @@ app.get('/product/:id', (req, res) => {
                 console.log(productPersist);
 
                 res.render('pages/product', {
-                    'product': productPersist,
-                    'page': req.url
+                    product: productPersist,
+                    page: req.url,
+                    socket: socket
                 });
 
                 await productPersist.save();

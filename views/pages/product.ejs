@@ -114,6 +114,8 @@
         integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        console.log(`<%= locals.socket.host %>`);
+        
         const insertPrice = (product) => {
             if (product.found) {
                 $("#prices").append(
@@ -131,7 +133,7 @@
 
 
         let gtin = Product.gtin;
-        var socket = io('localhost:9090', {
+        var socket = io('<%= locals.socket.host %>:<%= locals.socket.port %>', {
             'forceNew': true
         });
 
