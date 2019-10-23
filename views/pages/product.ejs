@@ -135,11 +135,11 @@
         const insertPrice = (product) => {
             if (product.found) {
                 $("#prices").append(
-                    `<li>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.price}€</li>`
+                    `<i class="fas fa-store"></i><li>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.price}€</li>`
                 );
             } else {
                 $("#prices").append(
-                    `<li>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.text}</li>`
+                    `<i class="fas fa-store"></i><li>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.text}</li>`
                 );
             }
         }
@@ -165,7 +165,7 @@
             socket.emit('getPriceCarrefour', gtin);
         } else {
             $("#carrefourPrice").append(
-                `<li>${Carrefour.name} : ${Carrefour.globalPrice}€</li>`);
+                `<i class="fas fa-store"></i><li>${Carrefour.name} : ${Carrefour.globalPrice}€</li>`);
         }
 
 
@@ -210,9 +210,9 @@
         socket.on('getPriceCarrefourResponse', (response) => {
             if (response.found)
                 $("#carrefourPrice").append(
-                    `<li>${response.retailer} : ${response.price}€</li>`);
+                    `<i class="fas fa-store"></i><li>${response.retailer} : ${response.price}€</li>`);
             else
-                $("#carrefourPrice").append(`<li>${response.retailer} : ${response.text}</li>`)
+                $("#carrefourPrice").append(`<i class="fas fa-store"></i><li>${response.retailer} : ${response.text}</li>`)
         });
 
         socket.on('getPriceAuchanResponse', (response) => {
