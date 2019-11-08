@@ -8,10 +8,12 @@
     ul {
       list-style: none;
     }
-    #categories li:before {
-      content: "\f07c";
-      font-family: FontAwesome;
-      color: #0056b3;
+    #categories li i {
+      color: #007bff;
+      margin-right: 5px;
+    }
+    #categories li:hover > i {
+      color: #0056b3;;
     }
     @media (min-width: 576px) {
       .card-columns {
@@ -48,7 +50,7 @@
   <br />
   <section class="container-flat">
     <div class="jumbotron flat">
-      <h1>Categories</h1>
+      <h1 class="text-center">Categories</h1>
       <hr>
       <div class="card-columns" id="categories">
         <% categories.forEach((category) => { %>
@@ -58,6 +60,7 @@
               <ul class="card-body mb-0">
                 <% category.data.forEach((cat) => { %>
                 <li>
+                    <i class="fas fa-folder-open"></i>
                     <a href="/products/categories/<%= cat.name%>?returnLink=<%= page %>" class="capitalize"><%= cat.name %></a>
                 </li>
                 <% }) %>
@@ -66,10 +69,6 @@
         </div>
         <% }) %>
       </div>
-      <span id='variableJSON' hidden>
-        <%= JSON.stringify(categories); %>
-      </span>
-
     </div>
   </section>
 
@@ -79,12 +78,6 @@
   <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
     crossorigin="anonymous"></script>
   <script src="/socket.io/socket.io.js"></script>
-  <script>
-    var variableJSON = JSON.parse($('#variableJSON').text());
-    $('#variableJSON').remove();
-    console.log(variableJSON);
-    var socket = io();
-  </script>
 </body>
 
 </html>

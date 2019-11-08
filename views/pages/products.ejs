@@ -47,7 +47,7 @@
     <section class="container-flat">
         <div class="jumbotron flat">
             <% if(locals.returnLink) { %>
-                <h1 class="text-center">All our products in <a href="" class="capitalize"><%= category %></a></h1>
+                <h1 class="text-center">All products in <a href="" class="capitalize"><%= category %></a></h1>
                 <a class="btn btn-link" href="<%= returnLink %>" id="returnLink">
                     <% if(locals.productName) { %>
                         Return to <%= productName %>
@@ -56,16 +56,13 @@
                     <% } %>
                 </a>
             <% } else { %>
-                <h1 class="text-center">All our products</h1>
+                <h1 class="text-center">All products</h1>
             <% } %>
             <hr>
-            <span id='variableJSON' hidden>
-                <%= JSON.stringify(products); %>
-            </span>
             <div class="products card-columns">
                 <% products.forEach((product) => { %>
                 <div class="card m-2" style="width: 18rem;">
-                    <img src="<%= product.images[0] %>" class="card-img-top d-block text-center text-muted m-2"
+                    <img src="<%= product.images[0] %>" class="card-img-top d-block text-center text-muted p-3"
                         alt="Image not available yet.">
                     <div class="card-body pt-1">
                         <h5 class="card-title mb-0"><%= product.name %></h5>
@@ -91,12 +88,6 @@
     <script src="https://code.jquery.com/jquery-3.4.1.js"
         integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        var variableJSON = JSON.parse($('#variableJSON').text());
-        $('#variableJSON').remove();
-        console.log(variableJSON);
-        var socket = io();
-    </script>
 </body>
 
 </html>

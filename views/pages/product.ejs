@@ -9,8 +9,43 @@
             font-size: 0.8em;
         }
 
-        section ul {
+        #ingredients ul,
+        #prices,
+        #carrefourPrice {
             list-style: none;
+            padding-left: 20px;
+            line-height: 2em;
+        }
+
+        li i {
+            margin-right: 10px;
+            color: #212529;
+        }
+
+        .product-img {
+            max-width: 500px;
+            max-height: 500px;
+        }
+
+        .carousel-control-prev-icon {
+            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23343A40' viewBox='0 0 8 8'%3E%3Cpath d='M5.25 0l-4 4 4 4 1.5-1.5-2.5-2.5 2.5-2.5-1.5-1.5z'/%3E%3C/svg%3E");
+        }
+
+        .carousel-control-next-icon {
+            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23343A40' viewBox='0 0 8 8'%3E%3Cpath d='M2.75 0l-1.5 1.5 2.5 2.5-2.5 2.5 1.5 1.5 4-4-4-4z'/%3E%3C/svg%3E");
+        }
+
+        ol.carousel-indicators li {
+            background: #343A40 !important;
+        }
+
+        ol.carousel-indicators li.active {
+            background: #828D99 !important;
+        }
+
+        ol.carousel-indicators li:hover,
+        .product-img:hover {
+            cursor: pointer;
         }
     </style>
 </head>
@@ -23,18 +58,27 @@
     <br />
     <br />
     <section class="container">
-        <div class="jumbotron">
+        <div class="jumbotron pb-2 pt-4">
             <%if (product != null) { %>
-            <h1>
+            <h3>
                 <%= product.name %> - <%=product.quantity%>
                 <% if(locals.product.generic_name) { %>
-                    <small>
-                        (<%= product.generic_name %>)
-                    </small>
+                <small>
+                    (<%= product.generic_name %>)
+                </small>
                 <% } %>
-            </h1>
-            <h3>Brand : <span class="capitalize"><a href="/products/brand/<%= product.brand %>"><%= product.brand %></a></span></h3>
+            </h3>
             <small class="text-muted"><%= product.gtin %></small>
+            <h4 id="brands">Brands :
+                <small class="capitalize">
+                    <% product.brand.forEach((brand) => { %>
+
+                        <a class="mr-3" href="/products/brand/<%= brand %>"><%= brand %></a>
+
+                    <% }) %>
+                </small>
+            </h4>
+            
             <h4>Categories :
                 <small>
                     <% product.categories.forEach((categorie, i) => { %>
@@ -79,24 +123,52 @@
             <ul id="prices">
             </ul>
 
-            <h3>Images</h3>
+            <hr>
+            <h3>Images <small id="imagesCount">(<%= product.images.length %>)</small></h3>
             <div id="images">
-                <% product.images.forEach((image) => { %>
-                <img src="<%= image %>" alt="Image for <%= product.name %>" width="500px" />
-                <% }) %>
+                <div id="carousel" class="carousel slide" data-ride="carousel">
+                    <ol class="carousel-indicators" id="carouselIndicators">
+                        <% for(var i = 0; i < product.images.length; i++) { %>
+                        <li data-target="#carousel" data-slide-to="<%= i %>"></li>
+                        <% }%>
+                    </ol>
+                    <div class="carousel-inner" id="carouselWrapper">
+
+                        <% for(var i = 0; i < product.images.length; i++) { %>
+                        <div class="carousel-item text-center <% if(i==0) {%>active<% } %>">
+                            <img src="<%= product.images[i] %>" alt="" class="product-img">
+                        </div>
+                        <% } %>
+                    </div>
+                    <a class="carousel-control-prev color-dark" href="#carousel" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#carousel" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
             </div>
 
+            <hr>
+
             <h3>Ingredients</h3>
-            <ul>
-                <% product.ingredients.forEach((ingredient) => { %>
-                <li><%= ingredient.charAt(0).toUpperCase() + ingredient.substring(1) %></li>
-                <% }); %>
-            </ul>
+            <div id="ingredients">
+                <ul>
+                    <% product.ingredients.forEach((ingredient) => { %>
+                    <li><i class="fas fa-carrot"></i><%= ingredient.charAt(0).toUpperCase() + ingredient.substring(1) %>
+                    </li>
+                    <% }); %>
+                </ul>
+            </div>
+
+            <hr>
 
             <h3>Quantity</h3>
             <p><%= product.quantity %></p>
 
-            <span id='variableJSON' hidden>
+            <span id='product' hidden>
                 <%= JSON.stringify(product); %>
             </span>
             <% } else { %>
@@ -111,33 +183,60 @@
         </div>
     </section>
 
+    <div class="modal fade" id="productGalery" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><%= product.name %></h4>
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span
+                            class="sr-only">Close</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <img id="productGaleryImage" class="img-responsive col-md-12" src="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary float-left" id="closeModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <% include ../partials/footer %>
     </footer>
-    <script src="https://code.jquery.com/jquery-3.4.1.js"
-        integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
+    </script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+    </script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         console.log(`<%= locals.socket.host %>`);
-        
+
         const insertPrice = (product) => {
             if (product.found) {
                 $("#prices").append(
-                    `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.price}€</li>`
+                    `<li><i class="fas fa-store"></i>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.price}€</li>`
                 );
             } else {
                 $("#prices").append(
-                    `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.text}</li>`
+                    `<li><i class="fas fa-store"></i>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.text}</li>`
                 );
             }
         }
-        var Product = JSON.parse($('#variableJSON').text());
-        $('#variableJSON').remove();
+        const Product = JSON.parse($('#product').text());
+        $('#product').remove();
         console.log(Product);
 
 
         let gtin = Product.gtin;
-        var socket = io('<%= locals.socket.host %>:<%= locals.socket.port %>', {
+        const socket = io('<%= locals.socket.host %>:<%= locals.socket.port %>', {
             'forceNew': true
         });
 
@@ -153,25 +252,34 @@
             socket.emit('getPriceCarrefour', gtin);
         } else {
             $("#carrefourPrice").append(
-                `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${Carrefour.name} : ${Carrefour.globalPrice}€</li>`);
+                `<li><i class="fas fa-store"></i>${Carrefour.name} : ${Carrefour.globalPrice}€</li>`
+            );
         }
 
-
-
-
         socket.on('getImagesResponse', async (data) => {
+            console.log(data.images);
+
             if (data != null) {
-                data.images.forEach((image) => {
-                    $('#images').append(`<img src="${image}" width="500px"/>`);
-                });
+                for (let i = 0; i < data.images.length; i++) {
+                    let img = new Image();
+                    img.onload = async () => {
+                        $('#carouselIndicators').append(
+                            `<li data-target="#carousel" data-slide-to="${i}"></li>`);
+                        $('#carouselWrapper').append(`
+                            <div class="carousel-item text-center ${i == 0 ? 'active' : ''}">
+                                <img src="${data.images[i]}" alt="" class="product-img">
+                            </div>
+                        `)
+                    }
+                    img.src = data.images[i];
+                }
+                $('#imagesCount').html(`(${data.images.length})`)
             }
         });
 
         socket.on('getPriceResponse', async (response) => {
             insertPrice(response)
         })
-
-
 
         socket.on('getPriceLeclercResponse', (response) => {
             console.log(response);
@@ -194,13 +302,15 @@
             insertPrice(response);
         })
 
-
         socket.on('getPriceCarrefourResponse', (response) => {
-            if(response.found)
+            if (response.found)
                 $("#carrefourPrice").append(
-                    `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${response.retailer} : ${response.price}€</li>`);
+                    `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${response.retailer} : ${response.price}€</li>`
+                );
             else
-                $("#carrefourPrice").append(`<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${response.retailer} : ${response.text}</li>`)
+                $("#carrefourPrice").append(
+                    `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${response.retailer} : ${response.text}</li>`
+                )
         });
 
         socket.on('getPriceAuchanResponse', (response) => {
@@ -215,7 +325,7 @@
             if ($('#zipcodeForm')[0].checkValidity() === false) {
 
             } else {
-                var cp = $('#zipcodeInput').val();
+                const cp = $('#zipcodeInput').val();
                 console.log(cp);
 
                 socket.emit('getPriceAuchan', gtin, cp);
@@ -225,6 +335,19 @@
             }
             $('#zipcodeForm')[0].classList.add('was-validated');
         });
+
+        $('.product-img').on('click', (event) => {
+            const image = event.currentTarget.src;
+            console.log(image);
+            $('#productGalery').modal('show')
+            $('#productGaleryImage')[0].src = image;
+        });
+
+        $('#closeModal').on('click', () => {
+            $('#productGalery').modal('hide');
+        })
+
+        $('.carousel').carousel()
     </script>
 </body>
 

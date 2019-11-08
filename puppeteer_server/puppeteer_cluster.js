@@ -6,13 +6,13 @@ const os = require('os')
 const cpuCount = os.cpus().length;
 const Scrapping = require('./scrapping_core');
 const speedTest = require('speedtest-net');
-var cluster, delay;
+let cluster, delay;
 
 // We need to speed test the server connection in order to predict how many time we have to wait
 // until the page is loaded. It will be used as follow : page.waitFor(fatest.bestPing * 10).
 speedTest({ maxTime: 1000 }).on('bestservers', servers => {
-    let fatest = servers[0];
-    for (var i = 1; i < servers.length; i++) {
+    const fatest = servers[0];
+    for (let i = 1; i < servers.length; i++) {
         if (servers[i].bestPing < fatest.bestPing) {
             fatest = servers[i]
         }
@@ -35,8 +35,16 @@ const main = async () => {
         maxConcurrency: cpuCount,
         puppeteerOptions: { /* args: ['--no-sandbox']*/ }
     });
+    
 
     console.log(`Puppeteer cluster launched with ${cpuCount} worker(s) and ${delay} ms of delay on port ${process.env.PUPPETEER_PORT}`);
+
+    const dataPuppeteer = {
+        gtin: 3560070478781,
+        delay: delay
+    }
+
+    await cluster.execute(dataPuppeteer, Scrapping.puppeteer_test);        
 };
 
 

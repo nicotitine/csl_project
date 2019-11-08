@@ -1,3 +1,32 @@
+const auv = require('ak-url-validate');
+
+async function puppeteer_test({
+    page,
+    data
+}) {
+
+    const gtin = data.gtin;
+    
+     /**
+     * Defines page user agent.
+     */
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0');
+
+    /**
+     * Request OFF API
+     * 
+     */
+    await page.goto('https://world.openfoodfacts.org/api/v0/product/' + gtin + '.json')
+    
+    const productJson = await page.evaluate(() => {
+        return JSON.parse(document.querySelector('body').innerText);
+    })
+
+    console.log(productJson.product.product_name)
+
+    return productJson;
+}
+
 /**
  * Search images for a given product id.
  * CARREFUL : parameters are confusing.
@@ -5,7 +34,10 @@
  * @param {Object} data contains the usefull parameters (gtin).
  * @returns {Object} contains valuable data scrapped using puppeteer.
  */
-async function puppeteer_imgs({page, data}) {
+async function puppeteer_imgs({
+    page,
+    data
+}) {
 
     /**
      * The default data we send back to the server
@@ -16,10 +48,15 @@ async function puppeteer_imgs({page, data}) {
     }
 
     /**
+     * 
+     */
+    let imagesFound = false;
+
+    /**
      * Defines page user agent.
      */
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0');
-    
+
     /**
      * Goes to google.com.
      */
@@ -43,12 +80,14 @@ async function puppeteer_imgs({page, data}) {
      * In this case, if the timeout is hit, we return the default result.
      * This selector matches with the google built-in preview mod images.
      */
-console.log('trying image puppeteer');
-  await page.waitFor(5000);
-await page.screenshot({path: 'screen-google.png'});
-        await page.waitForSelector('div[class="pla-ikpd__modal"] div[class="IY0jUb"]');
-  
-console.log('passing image puppeteer');
+    try {
+        await page.waitForSelector('div[class="pla-ikpd__modal"] div[class="IY0jUb"]', {
+            timeout: data.delay * 10
+        });
+    } catch (e) {
+        imagesFound = false;
+    }
+
 
     /**
      * Evaluate the page if there is any result. Evaluation allows us to read HTML node values.
@@ -57,34 +96,12 @@ console.log('passing image puppeteer');
      * So we return the innerHTML of the parent and manualy compute the result.
      */
     const parent = await page.evaluate(() => {
-        var imagesParent = document.querySelector('div[class="pla-ikpd__modal"] div[class="IY0jUb"]');
+        const imagesParent = document.querySelector('div[class="pla-ikpd__modal"] div[class="IY0jUb"]');
 
         if (imagesParent == null) {
             return null;
         } else {
             return imagesParent.innerHTML;
-        }
-        
-        function toHideVSCODE() {
-            // let divs = document.querySelectorAll('div[jscontroller="Q7Rsec"]');
-            // console.log(divs.length);
-
-            // let images = [];
-            // for (var i = 0; i < divs.length; i++) {
-            //     if (divs[i].querySelector('div[class="nJGrxf FnqxG"] span').innerHTML.includes("carrefour.fr")) {
-            //         let src = divs[i].querySelector('a').href;
-
-            //         let params = src.split('&')
-            //         let finalSrc = params[0].split('=')[1];
-
-            //         finalSrc = decodeURIComponent(finalSrc);
-
-            //         if (finalSrc.includes(gtin)) {
-            //             images.push(finalSrc);
-            //         }
-            //     }
-            // }
-            // return images;
         }
     });
 
@@ -114,27 +131,115 @@ console.log('passing image puppeteer');
                 images[i] = images[i].split('"')[0];
                 result.images.push(images[i]);
             }
-
         }
+
         /**
-         * Some google imgs don't have any src attribute. In this case, the upper computation.
-         * will set images[i] at false.
-         * Here we filter the array to delete any null element and return the array.
+         * If result.images is not empty, then you have found images
          */
-        // return images.filter(function (el) {
-        //     return el != null;
-        // });
-
-        return result;
-
+        if (result.images.length > 0) {
+            imagesFound = true;
+        }
     }
 
     /**
      * Maybe that Google doesn't have any images. So we check if Carrefour does.
-     * TODO
      */
-    await page.goto('https://images.google.com/');
-    await page.waitFor(data.delay);
+    if (!imagesFound) {
+        await page.goto('https://images.google.com/');
+        await page.waitForSelector('input[name="q"]');
+        await page.type('input[name="q"]', data.gtin + '\n', {
+            delay: 20
+        });
+
+        console.log('ok for then');
+        
+        try {
+            await page.waitForSelector('div[jscontroller="Q7Rsec"]', {timeout: data.delay * 5});
+        } catch {
+            await page.screenshot({path: 'buddy-screenshot.png'});
+            console.log(await page.evaluate(() => {return document.documentElement.innerHTML}))
+        }
+
+        console.log('after waitForSselector')
+        await page.waitFor(data.delay * 3);
+        const images = await page.evaluate((gtin) => {
+            let divs = document.querySelectorAll('div[jscontroller="Q7Rsec"]');
+            let images = [];
+
+            for (let i = 0; i < divs.length; i++) {
+                if (divs[i].querySelector('div[class="nJGrxf FnqxG"] span').innerHTML.includes("carrefour.fr")) {
+                    let src = divs[i].querySelector('a').href;
+                    let params = src.split('&')
+                    let finalSrc = params[0].split('=')[1];
+
+                    finalSrc = decodeURIComponent(finalSrc);
+
+                    if (finalSrc.includes(gtin)) {
+                        images.push(finalSrc);
+                    }
+                }
+            }
+            return images;
+        }, data.gtin)
+
+        /**
+         * Here's an example of what result we got after searching on google :
+         * https://www.carrefour.fr/media/{X}x{Y}/Photosite/{category}/{image_name}_{image_number}.jpg?placeholder=1
+         * https://courses-en-ligne.carrefour.fr/media/cache/{X}x{Y}/Photosite/{category}/{image_name}_{image_number}.jpg
+         * /!\ We can also have url like this : 
+         * {X}x{Y} is the resolution.
+         * {image_name} is the final image name, it doesn't really matter.
+         * {image_number} is the number of the image. On some products, we can have up to 6 images, randomly sorted from 0 to 10 (or more ?).
+         * ?placeholder=1 is usefull for carrefour to control from where we are getting the image. We need to get ride of that.
+         * 
+         * Carrefour categories its images by resolution and we are not always getting big size resolution images from searching on google. 
+         * Different resolutions are available from 280x280 to 1500x1500.
+         * 
+         * We want a lot of different beautiful images for a product, so we will try every {image_numer} for 1500x1500 resolution
+         */
+        if (images.length > 0) {
+            const baseUrl = images[0].replace('?placeholder=1', '');
+
+            const categoryRegex = /\/Photosite\/(.*)\//gm;
+            const category = categoryRegex.exec(baseUrl)[1];
+
+            const imageNameRegex = /.+(\/.*)_.+$/gm;
+            const imageName = imageNameRegex.exec(baseUrl)[1];
+
+            const finalBaseUrl = 'https://www.carrefour.fr/media/1500x1500/Photosite/' + category + imageName + '_';
+
+            for (let number = 0; number < 10; number++) {
+                const finalUrl = finalBaseUrl + number + '.jpg';
+                const response = await auv.isValidUrl(finalUrl);
+
+                if (response.isValid) {
+                    result.images.push(finalUrl)
+                }
+            }
+
+
+            if (result.images.length > 0) {
+                imagesFound = true;
+            }
+        }
+    }
+
+    if(!imagesFound) {
+        console.log('!images');
+        
+        const res = await page.evaluate(() => {
+            const src = document.querySelector('div[jscontroller="Q7Rsec"] a').href;
+            const params = src.split('&')
+            const finalSrc = decodeURIComponent(params[0].split('=')[1])
+
+            return finalSrc;
+        });
+
+        result.images.push(res);       
+    }
+
+
+    return result;
 }
 
 /**
@@ -144,11 +249,14 @@ console.log('passing image puppeteer');
  * @param {Object} data contains the usefull parameters (gtin).
  * @returns {Object} contains valuable data scrapped using puppeteer.
  */
-async function puppeteer_price_carrefour({page, data}) {
+async function puppeteer_price_carrefour({
+    page,
+    data
+}) {
 
     /**
      * The default data we send back to the client.
-     */    
+     */
     let result = {
         gtin: data.gtin,
         price: null,
@@ -171,14 +279,14 @@ async function puppeteer_price_carrefour({page, data}) {
      * Wait for the main input to be loaded.
      */
     await page.waitForSelector('input[name="q"]');
-    
+
     /**
      * Types the gtin in the main input and simulates an "Enter key press" using "\n".
      */
     await page.type('input[name="q"]', data.gtin + '\n', {
         delay: 20
     })
-    
+
     /**
      * Wait for the results to be displayed.
      * We need try - catch here. If the timeout is hit, it throws an error we have to handle.
@@ -186,7 +294,9 @@ async function puppeteer_price_carrefour({page, data}) {
      * This selector matches with the price div.
      */
     try {
-        await page.waitForSelector('div[id="search"] div[class="g"] div[class="slp f"]', {timeout: data.delay * 5});
+        await page.waitForSelector('div[id="search"] div[class="g"] div[class="slp f"]', {
+            timeout: data.delay * 5
+        });
     } catch (error) {
         return result;
     }
@@ -204,7 +314,7 @@ async function puppeteer_price_carrefour({page, data}) {
         }
 
         return result;
-    }, result);       
+    }, result);
     return results;
 }
 
@@ -215,11 +325,14 @@ async function puppeteer_price_carrefour({page, data}) {
  * @param {Object} data contains the usefull parameters (gtin, zipcode).
  * @returns {Object} contains valuable data scrapped using puppeteer.
  */
-async function puppeteer_price_auchan({page, data}) {
+async function puppeteer_price_auchan({
+    page,
+    data
+}) {
 
     /**
      * The default data we send back to the client.
-     */ 
+     */
     let result = {
         gtin: data.gtin,
         price: null,
@@ -255,7 +368,9 @@ async function puppeteer_price_auchan({page, data}) {
      * This selector matches with the product div.
      */
     try {
-        await page.waitForSelector('div[class="product-thumbnail__wrapper"] a', {timeout: data.delay * 5});
+        await page.waitForSelector('div[class="product-thumbnail__wrapper"] a', {
+            timeout: data.delay * 5
+        });
     } catch (error) {
         return result;
     }
@@ -266,8 +381,8 @@ async function puppeteer_price_auchan({page, data}) {
      */
     const auchanID = await page.evaluate(() => {
         if (document.querySelector('div[class="product-thumbnail__wrapper"] a') != null) {
-            var link = document.querySelector('div[class="product-thumbnail__wrapper"] a').href;
-            return link.split('/p-')[1];
+            const link = document.querySelector('div[class="product-thumbnail__wrapper"] a').href.split('/p-')[1];
+            return link;
         } else {
             return null;
         }
@@ -278,7 +393,7 @@ async function puppeteer_price_auchan({page, data}) {
      */
     if (!auchanID) {
         return result;
-    }    
+    }
 
     /**
      * Auchan divides its drive searchs in two ways :
@@ -296,7 +411,7 @@ async function puppeteer_price_auchan({page, data}) {
      * Wait the zipcode input to be displayed.
      */
     await page.waitForSelector('input[id="queryinput"]')
-    
+
     /**
      * Types the zipcode.
      */
@@ -401,7 +516,9 @@ async function puppeteer_price_auchan({page, data}) {
          * Wait for results to be displayed
          */
         try {
-            await page.waitForSelector('p[class="price-standard"] span[class="price-standard__decimal"]', {timeout: data.delay * 5});
+            await page.waitForSelector('p[class="price-standard"] span[class="price-standard__decimal"]', {
+                timeout: data.delay * 5
+            });
         } catch {
             result.text = 'Product locally not found.';
             return result;
@@ -437,8 +554,11 @@ async function puppeteer_price_auchan({page, data}) {
  * @param {Object} data contains the usefull parameters (gtin, zipcode).
  * @returns {Object} contains valuable data scrapped using puppeteer.
  */
-async function puppeteer_price_leclerc({page, data}) {
-    
+async function puppeteer_price_leclerc({
+    page,
+    data
+}) {
+
     /**
      * The default data we send back to the client.
      */
@@ -451,7 +571,7 @@ async function puppeteer_price_leclerc({page, data}) {
         text: 'Product not found.'
     };
 
-     /**
+    /**
      * Defines page user agent.
      */
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0');
@@ -460,7 +580,7 @@ async function puppeteer_price_leclerc({page, data}) {
      * Goes to recherche.leclerc/recherche?q=gtin
      */
     await page.goto('https://www.recherche.leclerc/recherche?q=' + data.gtin);
-    
+
     /**
      * Wait the results to be displayed.
      * We need try - catch here. If the timeout is hit, it throws an error we have to handle.
@@ -468,11 +588,13 @@ async function puppeteer_price_leclerc({page, data}) {
      * This selector matches with the product div.
      */
     try {
-        await page.waitForSelector('div[id="conteneur_produits"]', {timeout: data.delay * 5});
+        await page.waitForSelector('div[id="conteneur_produits"]', {
+            timeout: data.delay * 5
+        });
     } catch (error) {
         return result;
     }
-    
+
     /**
      * If the product is found, we have to extract the product full name.
      * We need this name to search for this product on leclercdrive.fr.
@@ -500,7 +622,7 @@ async function puppeteer_price_leclerc({page, data}) {
      * Goes to leclercdrive.fr.
      */
     await page.goto('https://www.leclercdrive.fr/');
-    
+
     /**
      * Wait the zipcode input to be loaded.
      */
@@ -535,15 +657,15 @@ async function puppeteer_price_leclerc({page, data}) {
         let divs = document.querySelector('#divWPAD337_GoogleMaps > div > div > div:nth-child(1) > div:nth-child(3) > div > div:nth-child(3)').childNodes;
         let divToClick;
 
-        for(var i = 0; i < divs.length; i++) {
-            if(divs[i].hasAttribute('title')) {
+        for (let i = 0; i < divs.length; i++) {
+            if (divs[i].hasAttribute('title')) {
                 divToClick = divs[i];
-                
+
                 break;
             }
-            
+
         }
-        divToClick.click();        
+        divToClick.click();
     });
 
     /**
@@ -555,7 +677,7 @@ async function puppeteer_price_leclerc({page, data}) {
      * Close it.
      */
     await page.click('div[class="popinPRPL-choix"] a');
-    
+
     /**
      * Wait the main search input to be loaded.
      */
@@ -572,7 +694,7 @@ async function puppeteer_price_leclerc({page, data}) {
      * Wait the results to be loaded.
      */
     await page.waitForSelector('ul[id="ulListeProduits"] li');
-    await page.waitForSelector('a[id="aWCSD333_PL"]');    
+    await page.waitForSelector('a[id="aWCSD333_PL"]');
 
     /**
      * Evaluate the page to compare results name and full name we have.
@@ -624,11 +746,14 @@ async function puppeteer_price_leclerc({page, data}) {
  * @param {Object} data contains the usefull parameters (gtin, zipcode).
  * @returns {Object} contains valuable data scrapped using puppeteer.
  */
-async function puppeteer_price_magasinsu({page, data}) {
+async function puppeteer_price_magasinsu({
+    page,
+    data
+}) {
 
     /**
      * The default data we send back to the client.
-     */ 
+     */
     let result = {
         price: null,
         drive: '',
@@ -642,7 +767,7 @@ async function puppeteer_price_magasinsu({page, data}) {
      * Goes to courseu.com/drive/home.
      */
     await page.goto('https://www.coursesu.com/drive/home');
-    
+
     /**
      * Wait for the zipcode search input to be loaded.
      */
@@ -654,12 +779,12 @@ async function puppeteer_price_magasinsu({page, data}) {
     await page.type('input[id="store-search"]', data.zipcode, {
         delay: 20
     });
-    
+
     /**
      * Wait the result to be displayed.
      */
     await page.waitForSelector('p[class="search-suggestion"] span');
-    
+
     /**
      * Clicks on the first result.
      */
@@ -669,7 +794,7 @@ async function puppeteer_price_magasinsu({page, data}) {
      * Wait the result to be displayed.
      */
     await page.waitForSelector('ul[id="quick-content"] a[class="button accent-button choose"]');
-    
+
     /**
      * Clicks on the first result to enter the drive.
      */
@@ -684,7 +809,7 @@ async function puppeteer_price_magasinsu({page, data}) {
      * Close it.
      */
     await page.click('div[class="custom-dialog__dialog custom-dialog__dialog--login"] a[class="ui-button ui-button--background custom-dialog__close"]');
-    
+
     /**
      * Wait the main search input to be displayed.
      */
@@ -698,13 +823,15 @@ async function puppeteer_price_magasinsu({page, data}) {
     });
 
     console.log('At least trying!');
-    
+
 
     /**
      * Wait the result to be displayed. If there is no result, we return de default result.
      */
     try {
-        await page.waitForSelector('ul[id="search-result-items"] li span[class="sale-price"] span', {timeout: data.delay * 10});
+        await page.waitForSelector('ul[id="search-result-items"] li span[class="sale-price"] span', {
+            timeout: data.delay * 10
+        });
     } catch {
         return result;
     }
@@ -713,7 +840,7 @@ async function puppeteer_price_magasinsu({page, data}) {
      * Wait the drive name to be displayed.
      */
     await page.waitForSelector('nav span[class="store-name"]');
-    
+
     /**
      * Evaluate the page if there is any result. Evaluation allows us to read HTML node values.
      * Computes price from HTML Elements and configures result.
@@ -730,7 +857,7 @@ async function puppeteer_price_magasinsu({page, data}) {
         result.drive = document.querySelector('nav span[class="store-name"]').innerHTML;
         return result;
     }, result);
-    
+
     return results;
 };
 
@@ -741,11 +868,14 @@ async function puppeteer_price_magasinsu({page, data}) {
  * @param {Object} data contains the usefull parameters (gtin, zipcode).
  * @returns {Object} contains valuable data scrapped using puppeteer.
  */
-async function puppeteer_price_intermarche({page, data}) {
-    
+async function puppeteer_price_intermarche({
+    page,
+    data
+}) {
+
     /**
      * The default data we send back to the client.
-     */  
+     */
     let result = {
         price: null,
         drive: '',
@@ -754,22 +884,22 @@ async function puppeteer_price_intermarche({page, data}) {
         retailer: 'Intermarche',
         text: 'Product not found.'
     };
-    
+
     /**
      * Goes to intermarche.com.
      */
     await page.goto('https://www.intermarche.com/');
-    
+
     /**
      * Wait for the welcome popup to be displayed.
      */
     await page.waitForSelector('div[id="didomi-popup"] button[class="didomi-components-button didomi-button didomi-components-button--color didomi-button-highlight"]')
-    
+
     /**
      * Close it.
      */
     await page.click('div[id="didomi-popup"] button[class="didomi-components-button didomi-button didomi-components-button--color didomi-button-highlight"]');
-    
+
     /**
      * Wait for the zipcode input to be loaded.
      */
@@ -781,14 +911,16 @@ async function puppeteer_price_intermarche({page, data}) {
     await page.type('input[id="downshift-0-input"]', data.zipcode + '\n', {
         delay: 50
     });
-    
-    
+
+
     /**
      * Wait for the result to be displayed.
      * If there is no result, we return result.
      */
     try {
-        await page.waitForSelector('li[id="downshift-0-item-0"]', {timeout: data.delay * 3})
+        await page.waitForSelector('li[id="downshift-0-item-0"]', {
+            timeout: data.delay * 3
+        })
     } catch (error) {
         result.text = 'No store found'
         return result;
@@ -810,23 +942,25 @@ async function puppeteer_price_intermarche({page, data}) {
      * Search for the product using the drive ID and the gtin.
      */
     await page.goto(`https://intermarche.com/rechercheproduits/${driveID}/recherche/product/${data.gtin}`)
-    
+
     /**
      * Wait the result to be displayed. If there is no result, we return de default result.
      */
     try {
         // ~= for includes at least one occurence
-        await page.waitForSelector('.ReactModal__Content span[class~="product-price--integer"]', {timeout: data.delay * 5});
+        await page.waitForSelector('.ReactModal__Content span[class~="product-price--integer"]', {
+            timeout: data.delay * 5
+        });
     } catch {
         return result;
     }
 
-   /**
+    /**
      * Evaluate the page if there is any result. Evaluation allows us to read HTML node values.
      * Computes price from HTML Elements and configures result.
      */
     const results = await page.evaluate((result) => {
-        
+
         if (document.querySelector('.ReactModal__Content .product-price--integer') != null &&
             document.querySelector('.ReactModal__Content .product-price--decimal') != null) {
             let priceUnit = document.querySelector('.ReactModal__Content .product-price--integer').innerHTML;
@@ -838,11 +972,12 @@ async function puppeteer_price_intermarche({page, data}) {
         result.drive = document.querySelector('button[class="sc-gPEVay gEcnxj"]').innerHTML.split("<svg")[0];
 
         return result;
-    }, result)    
+    }, result)
     return results;
 }
 
 module.exports = {
+    puppeteer_test,
     puppeteer_imgs,
     puppeteer_price_carrefour,
     puppeteer_price_auchan,

@@ -1,15 +1,18 @@
-const app = require('express')();
+const express = require('express');
+const app = express();
 const port = process.env.PORT;
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const Product = require('./models/product.model');
 const Category = require('./models/category.model');
 const request = require('request');
-const jsdom = require('jsdom');
+const favicon = require('serve-favicon');
 
 require('./db/db');
 
-var _puppeteerSocket = require('socket.io-client').connect('http://127.0.0.1:9091');
+const _puppeteerSocket = require('socket.io-client').connect('http://127.0.0.1:9091');
+
+app.use(favicon(__dirname + '/public/coin.png')); 
 
 app.set('view engine', 'ejs');
 app.set("views", __dirname + "/views");
@@ -59,8 +62,7 @@ app.get('/products/brand/:brand', (req, res) => {
 })
 
 app.get('/categories', async (req, res) => {
-    Category.find({}, (err, categories) => {
-        
+    Category.find().collation({locale: 'en', strength: 2}).sort({name: 1}).then((categories) => {        
         categories = (() => {
             if(categories.length == 0) {
                 return [];
@@ -85,7 +87,7 @@ app.get('/categories', async (req, res) => {
     });
 });
 
-app.get('/search/', (req, res) => {
+app.get('/search', (req, res) => {
     res.render('pages/search', {});
 })
 
@@ -158,7 +160,7 @@ app.get('/product/:id', (req, res) => {
                 
 
                 let product = data.product;
-                let regex = /_/gi
+                const regex = /_/gi
 
                 
                 for(let i = 0; i < product.categories_hierarchy.length; i++) {
@@ -166,16 +168,19 @@ app.get('/product/:id', (req, res) => {
                     product.categories_hierarchy[i] = product.categories_hierarchy[i].replace(/-/gi, ' ');
                 }
 
- 
+                let ingredients_array = [];
+                if(product.ingredients_text) {
+                    ingredients_array = product.ingredients_text.replace(regex, '').split(', ');
+                }
 
                 let productPersist = new Product({
                     'gtin': gtin,
                     'name': product.product_name,
                     'generic_name': product.generic_name,
-                    'ingredients': product.ingredients_text.replace(regex, '').split(', '),
+                    'ingredients': ingredients_array,
                     'quantity': product.quantity,
                     'categories': product.categories_hierarchy,
-                    'brand': product.brands
+                    'brand': product.brands.split(',')
                 });
 
                 console.log(productPersist);
@@ -221,7 +226,6 @@ _puppeteerSocket.on('getImagesResponse', async (data) => {
 });
 
 _puppeteerSocket.on('getPriceCarrefourResponse', async (data) => {  
-    console.log(data.data);
     
     // We can now respond to the client
     io.to(data.id).emit('getPriceCarrefourResponse', data.data);
@@ -229,21 +233,27 @@ _puppeteerSocket.on('getPriceCarrefourResponse', async (data) => {
     // Persistance will occur here
     if(data.data.found) {
         Product.findOne({gtin: data.data.gtin}, (err, product) => {
-
-            const carrefour = product.retailers.find((retailer) => {
-                return retailer.name == 'Carrefour'
-            })
-
-            if(!carrefour) {
-                product.retailers.push({
-                    name: 'Carrefour',
-                    globalPrice: data.data.price
+            if(product) {
+                const carrefour = product.retailers.find((retailer) => {
+                    return retailer.name == 'Carrefour'
                 })
+    
+                if(!carrefour) {
+                    product.retailers.push({
+                        name: 'Carrefour',
+                        globalPrice: data.data.price
+                    })
+                }
+                product.save();
             }
-
-            product.save();
         })
     }
+});
+
+_puppeteerSocket.on('getOFFResponse', async (data) => {
+
+    io.to(data.id).emit('getOFFResponse', data.data);
+
 });
 
 _puppeteerSocket.on('getPriceResponse', async (data) => {
