@@ -10,7 +10,9 @@ let cluster, delay;
 
 // We need to speed test the server connection in order to predict how many time we have to wait
 // until the page is loaded. It will be used as follow : page.waitFor(fatest.bestPing * 10).
-speedTest({ maxTime: 1000 }).on('bestservers', servers => {
+speedTest({
+    maxTime: 1000
+}).on('bestservers', servers => {
     const fatest = servers[0];
     for (let i = 1; i < servers.length; i++) {
         if (servers[i].bestPing < fatest.bestPing) {
@@ -33,18 +35,12 @@ const main = async () => {
     cluster = await Cluster.launch({
         concurrency: Cluster.CONCURRENCY_BROWSER,
         maxConcurrency: cpuCount,
-        puppeteerOptions: { /* args: ['--no-sandbox']*/ }
+        puppeteerOptions: {
+            /* args: ['--no-sandbox']*/ }
     });
-    
+
 
     console.log(`Puppeteer cluster launched with ${cpuCount} worker(s) and ${delay} ms of delay on port ${process.env.PUPPETEER_PORT}`);
-
-    const dataPuppeteer = {
-        gtin: 3560070478781,
-        delay: delay
-    }
-
-    await cluster.execute(dataPuppeteer, Scrapping.puppeteer_test);        
 };
 
 
@@ -56,25 +52,53 @@ const main = async () => {
 io.on("connection", function (socket) {
 
     /**
+     * Request from the server to get global information for a product
+     * @param {Object} params contains the product gtin and the user socket id.
+     */
+    socket.on('getOFF', async (params) => {
+
+        /**
+         * Execute puppeteer_OFF function in background. We wait the execution to be complete.
+         * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, delay).
+         * @param {Function} Scrapping.puppeteer_OFF is the function executed by the puppeteer cluster.
+         * @returns {Object} contains valuable data scrapped using puppeteer.
+         */
+        const dataPuppeteer = {
+            gtin: params.data.gtin,
+            delay: delay
+        };
+
+        const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_OFF);
+
+        /**
+         * Send the scrapped data to the central server. Wich will persist data and send it back to the final user.
+         * @param {String} message is the socket message.
+         * @param {Object} finalData contains scrapped data and the final user socket id.
+         */
+        const finalData = {
+            data: result,
+            id: params.id
+        }
+        socket.emit('getOFFResponse', finalData);
+    });
+
+    /**
      * Request from the server to get images for a product.
      * @param {Object} params contains the product gtin and the user socket id.
      */
     socket.on('getImages', async (params) => {
-
-        console.log('images from puppeteer');
-        
 
         /**
          * Execute puppeteer_imgs function in background. We wait the execution to be complete.
          * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, delay).
          * @param {Function} Scrapping.puppeteer_imgs is the function executed by the puppeteer cluster.
          * @returns {Object} contains valuable data scrapped using puppeteer.
-         */         
+         */
         const dataPuppeteer = {
             gtin: params.data.gtin,
             delay: delay
         }
-        const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_imgs);        
+        const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_imgs);
 
         /**
          * Send the scrapped data to the central server. Wich will persist data and send it back to the final user.
@@ -94,12 +118,12 @@ io.on("connection", function (socket) {
      */
     socket.on('getPriceCarrefour', async (params) => {
 
-         /**
+        /**
          * Execute puppeteer_price_carrefour function in background. We wait the execution to be complete.
          * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, zipcode, delay).
          * @param {Function} Scrapping.puppeteer_price_carrefour is the function executed by the puppeteer cluster.
          * @returns {Object} contains valuable data scrapped using puppeteer.
-         */         
+         */
         const dataPuppeteer = {
             gtin: params.data.gtin,
             delay: delay

@@ -22,7 +22,6 @@
     "nodemon": "^1.19.2",
     "puppeteer": "^1.20.0",
     "puppeteer-cluster": "^0.17.0",
-    "request": "^2.88.0",
     "serve-favicon": "^2.5.0",
     "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0",
@@ -37,5 +36,6 @@
     "url": "https://github.com/nicotitine/csl_project/issues"
   },
   "homepage": "https://github.com/nicotitine/csl_project#readme",
-  "description": ""
+  "description": "",
+  "devDependencies": {}
 }

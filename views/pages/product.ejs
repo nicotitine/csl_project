@@ -47,6 +47,11 @@
         .product-img:hover {
             cursor: pointer;
         }
+
+        .loader {
+            margin: -25px 0px -15px 0px;
+            width: 100px;
+        }
     </style>
 </head>
 
@@ -55,55 +60,57 @@
     <header>
         <%- include('../partials/nav', {active: 'Products'}) %>
     </header>
-    <br />
-    <br />
-    <section class="container">
-        <div class="jumbotron pb-2 pt-4">
-            <%if (product != null) { %>
+
+    <section class="container mt-5" id="app">
+        <div v-if="product" class="jumbotron pb-2 pt-4">
             <h3>
-                <%= product.name %> - <%=product.quantity%>
-                <% if(locals.product.generic_name) { %>
-                <small>
-                    (<%= product.generic_name %>)
+                {{ product.name }} - {{ product.quantity }}
+                <small v-if="product.generic_name">
+                    {{ product.generic_name }}
                 </small>
-                <% } %>
             </h3>
-            <small class="text-muted"><%= product.gtin %></small>
-            <h4 id="brands">Brands :
-                <small class="capitalize">
-                    <% product.brand.forEach((brand) => { %>
-
-                        <a class="mr-3" href="/products/brand/<%= brand %>"><%= brand %></a>
-
-                    <% }) %>
+            <small class="text-muted">{{ product.gtin }}</small>
+            <h4 id="brands">
+                Brands :
+                <small class="capitalize" v-for="brand in product.brand">
+                    <a class="mr-3" :href="urls.brand + brand">{{ brand }}</a>
                 </small>
             </h4>
-            
-            <h4>Categories :
-                <small>
-                    <% product.categories.forEach((categorie, i) => { %>
-                    <a href="/products/categories/<%= categorie + '?returnLink=' + page + '&productName=' + product.name %>"
-                        class="capitalize"><%= categorie %></a><% if(i < product.categories.length - 1) { %>,<% } %>
-                    <% }) %>
+
+            <h4 id="categories">
+                Categories :
+                <small v-for="category in product.categories">
+                    <a class="capitalize mr-3" :href="urls.categories + category">{{ category }}</a>
                 </small>
             </h4>
-            <hr />
+
+            <hr>
+
             <h3>Prices</h3>
             <ul id="carrefourPrice">
+                <li v-if="carrefour"><i class="fas fa-store"></i>Carrefour : {{ carrefour.globalPrice }}€</li>
+                <li v-else-if="loaders.carrefourPrice">
+                    <div class=" text-center">
+                        <img src="/loader.svg" alt="" class="loader">
+                        <h5>Loading...</h5>
+                    </div>
+                </li>
+                <li v-else>Carrefour : Product not found.</li>
             </ul>
-            <form class="needs-validation" id="zipcodeForm" novalidate>
+
+            <form class="needs-validation" id="zipcodeForm" @submit.prevent="submitZipcode">
                 <div class="form-row">
                     <div class="col-md-4 mb-3">
                         <div class="input-group">
                             <label for="zipcodeInput">Enter your zipcode to check for your local prices <small>(Your
                                     data is not
                                     stored)</small></label>
-                            <input id="zipcodeInput" type="text" name="zipcodeInput" class="form-control"
-                                placeholder="Zipcode (Ex: 64000)" aria-label="zipcode" aria-describedby="basic-addon2"
-                                minlength="5" maxlength="5" required>
+                            <input v-model="userInput.zipcode" id="zipcodeInput" type="text" name="zipcodeInput"
+                                class="form-control" placeholder="Zipcode (Ex: 64000)" aria-label="zipcode"
+                                aria-describedby="basic-addon2" minlength="5" maxlength="5" required>
                             <div class="input-group-append">
                                 <button id="zipcodeSubmitBtn" class="btn btn-outline-primary" type="submit"
-                                    href="">Send</button>
+                                    href="#">Send</button>
                             </div>
                             <div class="invalid-feedback">
                                 Please choose a valid zipcode.
@@ -116,29 +123,20 @@
                 </div>
             </form>
 
-            <div style="width: 30%">
-                <div class="input-group mb-3" width="30%">
-                </div>
-            </div>
-            <ul id="prices">
-            </ul>
-
             <hr>
-            <h3>Images <small id="imagesCount">(<%= product.images.length %>)</small></h3>
+
+            <h3>Images <small id="imagesCount">({{ product.images.length }})</small></h3>
             <div id="images">
-                <div id="carousel" class="carousel slide" data-ride="carousel">
+                <div v-if="product.images.length > 0" id="carousel" class="carousel slide" data-ride="carousel">
                     <ol class="carousel-indicators" id="carouselIndicators">
-                        <% for(var i = 0; i < product.images.length; i++) { %>
-                        <li data-target="#carousel" data-slide-to="<%= i %>"></li>
-                        <% }%>
+                        <li v-for="(image, index) in product.images" data-target="#carousel" :data-slide-to="index">
+                        </li>
                     </ol>
                     <div class="carousel-inner" id="carouselWrapper">
-
-                        <% for(var i = 0; i < product.images.length; i++) { %>
-                        <div class="carousel-item text-center <% if(i==0) {%>active<% } %>">
-                            <img src="<%= product.images[i] %>" alt="" class="product-img">
+                        <div v-for="(image, index) in product.images" class="carousel-item text-center"
+                            v-bind:class="{ active: index == 0 }">
+                            <img :src="image" alt="" class="product-img" @click="openImgModal">
                         </div>
-                        <% } %>
                     </div>
                     <a class="carousel-control-prev color-dark" href="#carousel" role="button" data-slide="prev">
                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -149,6 +147,13 @@
                         <span class="sr-only">Next</span>
                     </a>
                 </div>
+                <div v-else-if="loaders.images" class="text-center">
+                    <img class="loader" src="/loader.svg" alt="">
+                    <h5>Loading...</h5>
+                </div>
+                <div v-else class="text-center">
+                    <h5>No image found...</h5>
+                </div>
             </div>
 
             <hr>
@@ -156,52 +161,52 @@
             <h3>Ingredients</h3>
             <div id="ingredients">
                 <ul>
-                    <% product.ingredients.forEach((ingredient) => { %>
-                    <li><i class="fas fa-carrot"></i><%= ingredient.charAt(0).toUpperCase() + ingredient.substring(1) %>
+                    <li v-for="ingredient in product.ingredients">
+                        <i class="fas fa-carrot"></i>
+                        <span class="capitalize">
+                            {{ ingredient }}
+                        </span>
                     </li>
-                    <% }); %>
                 </ul>
             </div>
 
             <hr>
 
             <h3>Quantity</h3>
-            <p><%= product.quantity %></p>
+            <p>{{ product.quantity }}</p>
 
-            <span id='product' hidden>
-                <%= JSON.stringify(product); %>
-            </span>
-            <% } else { %>
-            <h1><%= error %></h1>
-            <hr />
-            <br />
-            <br />
+
+        </div>
+
+        <div v-else-if="loaders.product">
             <div class="text-center">
-                <button href="#" class="btn btn-primary">Back to home</button>
+                <img src="/loader.svg" alt="">
+                <h4>Loading...</h4>
             </div>
-            <% } %>
+        </div>
+
+        <div v-if="product" class="modal fade" id="productGalery" tabindex="-1" role="dialog"
+            aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">{{ product.name }}</h4>
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span
+                                class="sr-only">Close</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <img id="productGaleryImage" class="img-responsive col-md-12" :src="userInput.imageClicked">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary float-left" id="closeModal">Close</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
-    <div class="modal fade" id="productGalery" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title"><%= product.name %></h4>
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span
-                            class="sr-only">Close</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <img id="productGaleryImage" class="img-responsive col-md-12" src="">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary float-left" id="closeModal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <footer>
         <% include ../partials/footer %>
@@ -217,137 +222,247 @@
     </script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        console.log(`<%= locals.socket.host %>`);
-
-        const insertPrice = (product) => {
-            if (product.found) {
-                $("#prices").append(
-                    `<li><i class="fas fa-store"></i>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.price}€</li>`
-                );
-            } else {
-                $("#prices").append(
-                    `<li><i class="fas fa-store"></i>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.text}</li>`
-                );
-            }
-        }
-        const Product = JSON.parse($('#product').text());
-        $('#product').remove();
-        console.log(Product);
-
-
-        let gtin = Product.gtin;
-        const socket = io('<%= locals.socket.host %>:<%= locals.socket.port %>', {
-            'forceNew': true
-        });
-
-        if (Product.images.length == 0) {
-            socket.emit('getImages', gtin);
-        }
-
-        const Carrefour = Product.retailers.find((retailer) => {
-            return retailer.name == 'Carrefour';
-        });
-
-        if (!Carrefour) {
-            socket.emit('getPriceCarrefour', gtin);
-        } else {
-            $("#carrefourPrice").append(
-                `<li><i class="fas fa-store"></i>${Carrefour.name} : ${Carrefour.globalPrice}€</li>`
-            );
-        }
-
-        socket.on('getImagesResponse', async (data) => {
-            console.log(data.images);
-
-            if (data != null) {
-                for (let i = 0; i < data.images.length; i++) {
-                    let img = new Image();
-                    img.onload = async () => {
-                        $('#carouselIndicators').append(
-                            `<li data-target="#carousel" data-slide-to="${i}"></li>`);
-                        $('#carouselWrapper').append(`
-                            <div class="carousel-item text-center ${i == 0 ? 'active' : ''}">
-                                <img src="${data.images[i]}" alt="" class="product-img">
-                            </div>
-                        `)
+        const app = new Vue({
+            el: '#app',
+            data: () => {
+                return {
+                    product: null,
+                    carrefour: null,
+                    pricesPerZipode: {
+                        intermarche: null,
+                        auchan: null,
+                        magasinsU: null,
+                        leclerc: null
+                    },
+                    userInput: {
+                        zipcode: null,
+                        imageClicked: null
+                    },
+                    urls: {
+                        categories: '/categories/',
+                        brand: '/products/brand/'
+                    },
+                    loaders: {
+                        product: false,
+                        images: false,
+                        carrefourPrice: false
                     }
-                    img.src = data.images[i];
                 }
-                $('#imagesCount').html(`(${data.images.length})`)
+            },
+            mounted() {
+                const socket = io('<%= locals.socket.host %>:<%= locals.socket.port %>');
+                const gtin = window.location.pathname.split('/')[2];
+
+                if (`<%- found %>` == 'true') {
+                    console.log('Product found');
+
+                    try {
+                        this.product = JSON.parse(`<%- product %>`);
+                        console.log(this.product);
+
+                        this.computeCarrefourPrice();
+                        if (!this.carrefour) {
+                            socket.emit('getPriceCarrefour', gtin);
+                            this.loaders.carrefourPrice = true;
+                        }
+
+                        if (this.product.images.length == 0) {
+                            socket.emit('getImages', gtin);
+                            this.loaders.images = true;
+                        }
+                    } catch (error) {
+                        console.log(error);
+
+                    }
+                } else {
+                    console.log('Product not found');
+                    socket.emit('getOFF', gtin);
+                    this.loaders.product = true;
+                    socket.emit('getPriceCarrefour', gtin);
+                    this.loaders.carrefourPrice = true;
+                    socket.emit('getImages', gtin);
+                    this.loaders.images = true;
+                }
+
+                socket.on('getOFFResponse', async (data) => {
+                    if (data) {
+                        console.log('Product retrieved');
+
+                        this.product = data;
+                        this.loaders.product = false;
+                    }
+                })
+
+                socket.on('getPriceCarrefourResponse', async (data) => {
+                    if (data.price) {
+                        this.carrefour = {
+                            globalPrice: data.price
+                        }
+                        this.carrefour.globalPrice = this.carrefour.globalPrice.toLocaleString('en', {minimumIntegerDigits:1,minimumFractionDigits:2,useGrouping:false});
+                        this.loaders.carrefourPrice = false;
+                    }
+                })
+
+                socket.on('getImagesResponse', async (data) => {
+                    this.loaders.images = true;
+                    this.product.images = data.images;
+                })
+
+            },
+            methods: {
+                computeCarrefourPrice() {
+                    const carrefour = this.product.retailers.find((retailer) => {
+                        if (retailer.name == 'Carrefour')
+                            return retailer;
+                    })
+                    this.carrefour = carrefour;
+                    this.carrefour.globalPrice = this.carrefour.globalPrice.toLocaleString('en', {minimumIntegerDigits:1,minimumFractionDigits:2,useGrouping:false});
+                },
+                submitZipcode(e) {
+                    console.log(this.userInput.zipcode)
+                },
+                openImgModal(e) {
+                    this.userInput.imageClicked = e.srcElement.src;
+                    $('#productGalery').modal('show');
+                },
+                zeroFill(number, width) {
+                    width -= number.toString().length;
+                    if (width > 0) {
+                        return new Array(width + (/\./.test(number) ? 2 : 1)).join('0') + number;
+                    }
+                    return number + ""; // always return a string
+                }
             }
-        });
-
-        socket.on('getPriceResponse', async (response) => {
-            insertPrice(response)
         })
 
-        socket.on('getPriceLeclercResponse', (response) => {
-            console.log(response);
-            insertPrice(response)
-            // $("#prices").append(
-            //     `<li>${response.data.retailer} <small>(${response.data.drive} - ${response.data.zipcode})</small> : ${response.data.price}€</li>`
-            // );
-        });
+        // const insertPrice = (product) => {
+        //     if (product.found) {
+        //         $("#prices").append(
+        //             `<li><i class="fas fa-store"></i>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.price}€</li>`
+        //         );
+        //     } else {
+        //         $("#prices").append(
+        //             `<li><i class="fas fa-store"></i>${product.retailer} <small>(${product.drive} - ${product.zipcode})</small> : ${product.text}</li>`
+        //         );
+        //     }
+        // }
+        // const Product = JSON.parse($('#product').text());
+        // $('#product').remove();
 
-        socket.on('getPriceMagasinsuResponse', (response) => {
-            console.log(response);
-            insertPrice(response)
-            // $("#prices").append(
-            //     `<li>${response.data.retailer} <small>(${response.data.drive} - ${response.data.zipcode})</small> : ${response.data.price}€</li>`
-            // );
-        })
 
-        socket.on('getPriceIntermarcheResponse', (response) => {
-            console.log(response);
-            insertPrice(response);
-        })
+        // let gtin = Product.gtin;
+        // const socket = io('<%= locals.socket.host %>:<%= locals.socket.port %>', {
+        //     'forceNew': true
+        // });
 
-        socket.on('getPriceCarrefourResponse', (response) => {
-            if (response.found)
-                $("#carrefourPrice").append(
-                    `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${response.retailer} : ${response.price}€</li>`
-                );
-            else
-                $("#carrefourPrice").append(
-                    `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${response.retailer} : ${response.text}</li>`
-                )
-        });
+        // if (Product.images.length == 0) {
+        //     socket.emit('getImages', gtin);
+        // }
 
-        socket.on('getPriceAuchanResponse', (response) => {
-            console.log(response);
-            insertPrice(response)
-        });
+        // const Carrefour = Product.retailers.find((retailer) => {
+        //     return retailer.name == 'Carrefour';
+        // });
 
-        $('#zipcodeForm').on('submit', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+        // if (!Carrefour) {
+        //     socket.emit('getPriceCarrefour', gtin);
+        // } else {
+        //     $("#carrefourPrice").append(
+        //         `<li><i class="fas fa-store"></i>${Carrefour.name} : ${Carrefour.globalPrice}€</li>`
+        //     );
+        // }
 
-            if ($('#zipcodeForm')[0].checkValidity() === false) {
+        // socket.on('getImagesResponse', async (data) => {
+        //     console.log(data.images);
 
-            } else {
-                const cp = $('#zipcodeInput').val();
-                console.log(cp);
+        //     if (data != null) {
+        //         for (let i = 0; i < data.images.length; i++) {
+        //             let img = new Image();
+        //             img.onload = async () => {
+        //                 $('#carouselIndicators').append(
+        //                     `<li data-target="#carousel" data-slide-to="${i}"></li>`);
+        //                 $('#carouselWrapper').append(`
+        //                     <div class="carousel-item text-center ${i == 0 ? 'active' : ''}">
+        //                         <img src="${data.images[i]}" alt="" class="product-img">
+        //                     </div>
+        //                 `)
+        //             }
+        //             img.src = data.images[i];
+        //         }
+        //         $('#imagesCount').html(`(${data.images.length})`)
+        //     }
+        // });
 
-                socket.emit('getPriceAuchan', gtin, cp);
-                socket.emit('getPriceLeclerc', gtin, cp);
-                socket.emit('getPriceMagasinsu', gtin, cp);
-                socket.emit('getPriceIntermarche', gtin, cp);
-            }
-            $('#zipcodeForm')[0].classList.add('was-validated');
-        });
+        // socket.on('getPriceResponse', async (response) => {
+        //     insertPrice(response)
+        // })
 
-        $('.product-img').on('click', (event) => {
-            const image = event.currentTarget.src;
-            console.log(image);
-            $('#productGalery').modal('show')
-            $('#productGaleryImage')[0].src = image;
-        });
+        // socket.on('getPriceLeclercResponse', (response) => {
+        //     console.log(response);
+        //     insertPrice(response)
+        //     // $("#prices").append(
+        //     //     `<li>${response.data.retailer} <small>(${response.data.drive} - ${response.data.zipcode})</small> : ${response.data.price}€</li>`
+        //     // );
+        // });
 
-        $('#closeModal').on('click', () => {
-            $('#productGalery').modal('hide');
-        })
+        // socket.on('getPriceMagasinsuResponse', (response) => {
+        //     console.log(response);
+        //     insertPrice(response)
+        //     // $("#prices").append(
+        //     //     `<li>${response.data.retailer} <small>(${response.data.drive} - ${response.data.zipcode})</small> : ${response.data.price}€</li>`
+        //     // );
+        // })
 
-        $('.carousel').carousel()
+        // socket.on('getPriceIntermarcheResponse', (response) => {
+        //     console.log(response);
+        //     insertPrice(response);
+        // })
+
+        // socket.on('getPriceCarrefourResponse', (response) => {
+        //     if (response.found)
+        //         $("#carrefourPrice").append(
+        //             `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${response.retailer} : ${response.price}€</li>`
+        //         );
+        //     else
+        //         $("#carrefourPrice").append(
+        //             `<li><span style="color: #0056b3;"><i class="fas fa-store"></i></span>${response.retailer} : ${response.text}</li>`
+        //         )
+        // });
+
+        // socket.on('getPriceAuchanResponse', (response) => {
+        //     console.log(response);
+        //     insertPrice(response)
+        // });
+
+        // $('#zipcodeForm').on('submit', (e) => {
+        //     e.preventDefault();
+        //     e.stopPropagation();
+
+        //     if ($('#zipcodeForm')[0].checkValidity() === false) {
+
+        //     } else {
+        //         const cp = $('#zipcodeInput').val();
+        //         console.log(cp);
+
+        //         socket.emit('getPriceAuchan', gtin, cp);
+        //         socket.emit('getPriceLeclerc', gtin, cp);
+        //         socket.emit('getPriceMagasinsu', gtin, cp);
+        //         socket.emit('getPriceIntermarche', gtin, cp);
+        //     }
+        //     $('#zipcodeForm')[0].classList.add('was-validated');
+        // });
+
+        // $('.product-img').on('click', (event) => {
+        //     const image = event.currentTarget.src;
+        //     console.log(image);
+        //     $('#productGalery').modal('show')
+        //     $('#productGaleryImage')[0].src = image;
+        // });
+
+        // $('#closeModal').on('click', () => {
+        //     $('#productGalery').modal('hide');
+        // })
+
+        // $('.carousel').carousel()
     </script>
 </body>
 

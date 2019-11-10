@@ -61,7 +61,7 @@
                                     <h5 class="card-title mb-0">${data[i].name}</h5>
                                     <small class="text-muted">${data[i].gtin}</small>
                                     <br />
-                                    <a href="/product/${data[i].gtin}" class="btn btn-primary">More details</a>
+                                    <a href="/products/${data[i].gtin}" class="btn btn-primary">More details</a>
                                 </div>
                             </div>
                     `)
@@ -71,7 +71,7 @@
                     <h3 class="text-center text-success mt-4">This is a valid gtin code...</h3>
                     <br/>
                     <div class="text-center">
-                        <a href="/product/${req.term}" class="btn btn-primary">Scrap it !</a>
+                        <a href="/products/${req.term}" class="btn btn-primary">Scrap it !</a>
                     </div>
                     `)
             } else {

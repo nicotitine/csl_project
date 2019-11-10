@@ -1,13 +1,14 @@
 const auv = require('ak-url-validate');
 
-async function puppeteer_test({
+async function puppeteer_OFF({
     page,
     data
 }) {
 
+
     const gtin = data.gtin;
-    
-     /**
+
+    /**
      * Defines page user agent.
      */
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0');
@@ -17,7 +18,10 @@ async function puppeteer_test({
      * 
      */
     await page.goto('https://world.openfoodfacts.org/api/v0/product/' + gtin + '.json')
-    
+
+    /**
+     * Parses the product's innerText to a JSON object.
+     */
     const productJson = await page.evaluate(() => {
         return JSON.parse(document.querySelector('body').innerText);
     })
@@ -152,16 +156,18 @@ async function puppeteer_imgs({
         });
 
         console.log('ok for then');
-        
+
         try {
-            await page.waitForSelector('div[jscontroller="Q7Rsec"]', {timeout: data.delay * 5});
+            await page.waitForSelector('div[jscontroller="Q7Rsec"]', {
+                timeout: data.delay * 10
+            });
         } catch {
-            await page.screenshot({path: 'buddy-screenshot.png'});
-            console.log(await page.evaluate(() => {return document.documentElement.innerHTML}))
+            await page.screenshot({
+                path: 'buddy-screenshot.png'
+            });
         }
 
         console.log('after waitForSselector')
-        await page.waitFor(data.delay * 3);
         const images = await page.evaluate((gtin) => {
             let divs = document.querySelectorAll('div[jscontroller="Q7Rsec"]');
             let images = [];
@@ -224,18 +230,24 @@ async function puppeteer_imgs({
         }
     }
 
-    if(!imagesFound) {
+    if (!imagesFound) {
         console.log('!images');
-        
-        const res = await page.evaluate(() => {
-            const src = document.querySelector('div[jscontroller="Q7Rsec"] a').href;
-            const params = src.split('&')
-            const finalSrc = decodeURIComponent(params[0].split('=')[1])
 
-            return finalSrc;
+        const res = await page.evaluate(() => {
+            if (document.querySelector('div[jscontroller="Q7Rsec"] a')) {
+                const src = document.querySelector('div[jscontroller="Q7Rsec"] a').href;
+                const params = src.split('&')
+                const finalSrc = decodeURIComponent(params[0].split('=')[1])
+
+                return finalSrc;
+            }
+
+            return null;
         });
 
-        result.images.push(res);       
+        if(res) {
+            result.images.push(res);
+        }
     }
 
 
@@ -977,7 +989,7 @@ async function puppeteer_price_intermarche({
 }
 
 module.exports = {
-    puppeteer_test,
+    puppeteer_OFF,
     puppeteer_imgs,
     puppeteer_price_carrefour,
     puppeteer_price_auchan,
