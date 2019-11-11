@@ -3,38 +3,6 @@
 
 <head>
     <% include ../partials/head %>
-    <style>
-        #returnLink:before {
-            content: "\f0a8";
-            font-family: FontAwesome;
-        }
-        #returnLink:hover {
-            text-decoration: none;
-        }
-        @media (min-width: 576px) {
-            .card-columns {
-                column-count: 2;
-            }
-        }
-
-        @media (min-width: 768px) {
-            .card-columns {
-                column-count: 3;
-            }
-        }
-
-        @media (min-width: 992px) {
-            .card-columns {
-                column-count: 4;
-            }
-        }
-
-        @media (min-width: 1200px) {
-            .card-columns {
-                column-count: 5;
-            }
-        }
-    </style>
 </head>
 
 <body>
@@ -45,9 +13,9 @@
     <br />
     <br />
     <section class="container-flat">
-        <div class="jumbotron flat">
+        <div class="jumbotron flat" id="products">
             <% if(locals.returnLink) { %>
-                <h1 class="text-center">All products in <a href="" class="capitalize"><%= category %></a></h1>
+                <h3 class="text-center">All products in <a href="" class="capitalize"><%= category %></a></h3>
                 <a class="btn btn-link" href="<%= returnLink %>" id="returnLink">
                     <% if(locals.productName) { %>
                         Return to <%= productName %>
@@ -56,7 +24,7 @@
                     <% } %>
                 </a>
             <% } else { %>
-                <h1 class="text-center">All products</h1>
+                <h3 class="text-center">All products</h3>
             <% } %>
             <hr>
             <div class="products card-columns">

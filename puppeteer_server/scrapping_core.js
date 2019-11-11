@@ -26,8 +26,6 @@ async function puppeteer_OFF({
         return JSON.parse(document.querySelector('body').innerText);
     })
 
-    console.log(productJson.product.product_name)
-
     return productJson;
 }
 
@@ -162,9 +160,7 @@ async function puppeteer_imgs({
                 timeout: data.delay * 10
             });
         } catch {
-            await page.screenshot({
-                path: 'buddy-screenshot.png'
-            });
+           
         }
 
         console.log('after waitForSselector')
@@ -173,20 +169,37 @@ async function puppeteer_imgs({
             let images = [];
 
             for (let i = 0; i < divs.length; i++) {
-                if (divs[i].querySelector('div[class="nJGrxf FnqxG"] span').innerHTML.includes("carrefour.fr")) {
-                    let src = divs[i].querySelector('a').href;
-                    let params = src.split('&')
-                    let finalSrc = params[0].split('=')[1];
+                if (divs[i].querySelector('div[class="nJGrxf FnqxG"] span') && divs[i].querySelector('div[class="nJGrxf FnqxG"] span').innerHTML.includes("carrefour.fr")) {
+                    const src = divs[i].querySelector('div[class="rg_meta notranslate"]');
+                    
+                    if (src) {
+                        try {
+                            const jsonObject = JSON.parse(src.innerHTML);
+                            const url = jsonObject.ou;
 
-                    finalSrc = decodeURIComponent(finalSrc);
-
-                    if (finalSrc.includes(gtin)) {
-                        images.push(finalSrc);
+                            if (url.includes(gtin)) {
+                                images.push(url);
+                            }
+                        } catch (e) {
+                            
+                        }
                     }
+                                    
+                    // let params = src.split('&')
+      
+                    // let finalSrc = params[0].split('=')[1];
+
+                    // finalSrc = decodeURIComponent(finalSrc);
+
+                    
                 }
             }
             return images;
         }, data.gtin)
+
+        console.log(images);
+        
+       
 
         /**
          * Here's an example of what result we got after searching on google :

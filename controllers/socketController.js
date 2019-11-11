@@ -25,7 +25,7 @@ const serve = async (app) => {
         },
         id: socket.id
       };
-
+      
       serverSocket.emit('getOFF', params);
     });
 
@@ -136,7 +136,7 @@ const serve = async (app) => {
 
 
   serverSocket.on('getOFFResponse', async (data) => {
-
+    console.log(data);
     if (data.data.status == 1) {
       const product = await createProductPersist(data.data.product);
 
@@ -203,29 +203,66 @@ const serve = async (app) => {
 
 }
 
+const replaceAllBadChars = (string) => {
+
+  /**
+   * Remove all '\n'.
+   */
+  string = string.replace(/\n/g, ' ');
+
+  /**
+   * Remove all '\r'.
+   */
+  string = string.replace(/\r/g, ' ');
+
+  /**
+   * Remove all '\t'.
+   */
+  string = string.replace(/\t/g, ' ');
+  
+  /**
+   * Return the result.
+   */
+  return string;
+};
+
 const createProductPersist = async (product) => {
-  const regex = /_/gi
+
+  if (product.product_name) {
+    product.product_name = replaceAllBadChars(product.product_name);
+  }
+  
+  if (product.generic_name) {
+    product.generic_name = replaceAllBadChars(product.generic_name);
+  }
+
+  if (product.ingredients_text) {
+    product.ingredients_text = replaceAllBadChars(product.ingredients_text).replace(/_/gi, '').split(', ');
+  }
+
+  if (product.quantity) {
+    product.quantity = replaceAllBadChars(product.quantity);
+  }
 
   if (product.categories_hierarchy) {
     for (let i = 0; i < product.categories_hierarchy.length; i++) {
       product.categories_hierarchy[i] = product.categories_hierarchy[i].split(':')[1];
-      product.categories_hierarchy[i] = product.categories_hierarchy[i].replace(/-/gi, ' ');
+      product.categories_hierarchy[i] = replaceAllBadChars(product.categories_hierarchy[i]).replace(/-/gi, ' ');
     }
   }
 
-  let ingredients_array = [];
-  if (product.ingredients_text) {
-    ingredients_array = product.ingredients_text.replace(regex, '').replace('\n', '').replace('\r', '').split(', ');
+  if(product.brands) {
+    product.brands = replaceAllBadChars(product.brands).split(',');
   }
 
   const productPersist = new Product({
     'gtin': product._id,
-    'name': product.product_name.replace('\n', ''),
+    'name': product.product_name,
     'generic_name': product.generic_name,
-    'ingredients': ingredients_array,
+    'ingredients': product.ingredients_text,
     'quantity': product.quantity,
     'categories': product.categories_hierarchy,
-    'brand': product.brands.split(',')
+    'brand': product.brands
   });
 
   productPersist.save();

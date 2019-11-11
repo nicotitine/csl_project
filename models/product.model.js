@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const productSchema = mongoose.Schema({
     gtin: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     images: [{
         type: String
