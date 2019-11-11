@@ -1,0 +1,84 @@
+.capitalize {
+  text-transform: capitalize;
+}
+
+section ul {
+  list-style: none;
+  line-height: 1.5em;
+}
+
+#categories li i {
+  color: #007bff;
+  margin-right: 5px;
+}
+#categories li:hover > i {
+  color: #0056b3;;
+}
+
+@media (min-width: 576px) {
+  .card-columns {
+      column-count: 2;
+  }
+}
+
+@media (min-width: 768px) {
+  .card-columns {
+      column-count: 3;
+  }
+}
+
+@media (min-width: 992px) {
+  .card-columns {
+      column-count: 4;
+  }
+}
+
+@media (min-width: 1200px) {
+  .card-columns {
+      column-count: 4;
+  }
+  #products .card-columns {
+    column-count: 5;
+  }
+}
+
+#product h4 small a {
+  font-size: 0.8em;
+}
+
+#product li i {
+  margin-right: 10px;
+  color: #212529;
+}
+
+.product-img {
+  max-width: 500px;
+  max-height: 500px;
+}
+
+.carousel-control-prev-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23343A40' viewBox='0 0 8 8'%3E%3Cpath d='M5.25 0l-4 4 4 4 1.5-1.5-2.5-2.5 2.5-2.5-1.5-1.5z'/%3E%3C/svg%3E");
+}
+
+.carousel-control-next-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23343A40' viewBox='0 0 8 8'%3E%3Cpath d='M2.75 0l-1.5 1.5 2.5 2.5-2.5 2.5 1.5 1.5 4-4-4-4z'/%3E%3C/svg%3E");
+}
+
+ol.carousel-indicators li {
+  background: #343A40 !important;
+}
+
+ol.carousel-indicators li.active {
+  background: #828D99 !important;
+}
+
+ol.carousel-indicators li:hover,
+.product-img:hover {
+  cursor: pointer;
+}
+
+.loader {
+  margin: -25px 0px -15px 0px;
+  width: 100px;
+}
+
