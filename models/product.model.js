@@ -9,6 +9,10 @@ const productSchema = mongoose.Schema({
     images: [{
         type: String
     }],
+    report: {
+        type: Number,
+        default: 0
+    },
     prices: {
         type: Number
     },
@@ -52,7 +56,7 @@ const productSchema = mongoose.Schema({
             }
         }]
     }]
-})
+});
 
 const Product = mongoose.model('Product', productSchema);
 

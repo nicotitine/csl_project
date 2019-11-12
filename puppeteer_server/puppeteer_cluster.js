@@ -113,6 +113,37 @@ io.on("connection", function (socket) {
     });
 
     /**
+     * Request from the server to try to get other images for a product.
+     * @param {Object} params contains the product gtin and the user socket id.
+     */
+    socket.on('reportImages', async (params) => {
+
+         /**
+         * Execute puppeteer_imgs function in background. We wait the execution to be complete.
+         * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, delay).
+         * @param {Function} Scrapping.puppeteer_imgs is the function executed by the puppeteer cluster.
+         * @returns {Object} contains valuable data scrapped using puppeteer.
+         */
+        const dataPuppeteer = {
+            gtin: params.data.gtin,
+            report: params.data.report,
+            delay: delay
+        }
+        const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_imgs);
+
+        /**
+         * Send the scrapped data to the central server. Wich will persist data and send it back to the final user.
+         * @param {String} message is the socket message.
+         * @param {Object} finalData contains scrapped data and the final user socket id.
+         */
+        const finalData = {
+            data: result,
+            id: params.id
+        }
+        socket.emit('reportImagesResponse', finalData);
+    });
+
+    /**
      * Request from the server to get the carrefour price for a product.
      * @param {Object} params contains the product gtin and the user socket id.
      */
@@ -129,17 +160,15 @@ io.on("connection", function (socket) {
             delay: delay
         }
         const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_price_carrefour);
+        result.id = params.id      
 
         /**
          * Send the scrapped data to the central server. Wich will persist data and send it back to the final user.
          * @param {String} message is the socket message.
-         * @param {Object} finalData contains scrapped data and the final user socket id.
+         * @param {Object} result contains scrapped data and the final user socket id.
          */
-        const finalData = {
-            data: result,
-            id: params.id
-        }
-        socket.emit('getPriceCarrefourResponse', finalData);
+        
+        socket.emit('getPriceCarrefourResponse', result);
     });
 
     /**

@@ -1,4 +1,6 @@
 const auv = require('ak-url-validate');
+const Error = require('../models/Error');
+const fs = require('fs');
 
 async function puppeteer_OFF({
     page,
@@ -45,8 +47,11 @@ async function puppeteer_imgs({
      * The default data we send back to the server
      */
     let result = {
-        gtin: data.gtin,
-        images: []
+        data: {
+            gtin: data.gtin,
+            images: []
+        },
+        errors: []
     }
 
     /**
@@ -58,6 +63,10 @@ async function puppeteer_imgs({
      * Defines page user agent.
      */
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0');
+    await page.setViewport({
+        width: 1920,
+        height: 1080
+    })
 
     /**
      * Goes to google.com.
@@ -131,16 +140,23 @@ async function puppeteer_imgs({
                  * Example : 'http://foo.bar'.
                  */
                 images[i] = images[i].split('"')[0];
-                result.images.push(images[i]);
+                result.data.images.push(images[i]);
             }
         }
 
         /**
-         * If result.images is not empty, then you have found images
+         * If result.data.images is not empty, then you have found images
          */
-        if (result.images.length > 0) {
+        if (result.data.images.length > 0) {
             imagesFound = true;
         }
+    }
+
+    if(data.report == 1) {
+        console.log('report 1');
+        
+        imagesFound = false;
+        result.data.images = [];
     }
 
     /**
@@ -148,6 +164,7 @@ async function puppeteer_imgs({
      */
     if (!imagesFound) {
         await page.goto('https://images.google.com/');
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0');
         await page.waitForSelector('input[name="q"]');
         await page.type('input[name="q"]', data.gtin + '\n', {
             delay: 20
@@ -160,7 +177,8 @@ async function puppeteer_imgs({
                 timeout: data.delay * 10
             });
         } catch {
-           
+            const error = new Error('Unable to reach result.', 1, 'Chromium');
+            result.errors.push(error);
         }
 
         console.log('after waitForSselector')
@@ -171,7 +189,7 @@ async function puppeteer_imgs({
             for (let i = 0; i < divs.length; i++) {
                 if (divs[i].querySelector('div[class="nJGrxf FnqxG"] span') && divs[i].querySelector('div[class="nJGrxf FnqxG"] span').innerHTML.includes("carrefour.fr")) {
                     const src = divs[i].querySelector('div[class="rg_meta notranslate"]');
-                    
+
                     if (src) {
                         try {
                             const jsonObject = JSON.parse(src.innerHTML);
@@ -181,25 +199,22 @@ async function puppeteer_imgs({
                                 images.push(url);
                             }
                         } catch (e) {
-                            
+
                         }
                     }
-                                    
+
                     // let params = src.split('&')
-      
+
                     // let finalSrc = params[0].split('=')[1];
 
                     // finalSrc = decodeURIComponent(finalSrc);
 
-                    
+
                 }
             }
+
             return images;
         }, data.gtin)
-
-        console.log(images);
-        
-       
 
         /**
          * Here's an example of what result we got after searching on google :
@@ -232,23 +247,26 @@ async function puppeteer_imgs({
                 const response = await auv.isValidUrl(finalUrl);
 
                 if (response.isValid) {
-                    result.images.push(finalUrl)
+                    result.data.images.push(finalUrl)
                 }
             }
 
 
-            if (result.images.length > 0) {
+            if (result.data.images.length > 0) {
+                console.log('images found');
+                
                 imagesFound = true;
             }
         }
     }
+    
 
-    if (!imagesFound) {
+    if (!imagesFound || data.report == 2) {
         console.log('!images');
 
         const res = await page.evaluate(() => {
-            if (document.querySelector('div[jscontroller="Q7Rsec"] a')) {
-                const src = document.querySelector('div[jscontroller="Q7Rsec"] a').href;
+            if (document.querySelector('div[id="rg_s"] div[jscontroller="Q7Rsec"] a')) {
+                const src = document.querySelector('div[id="rg_s"] div[jscontroller="Q7Rsec"] a').href;
                 const params = src.split('&')
                 const finalSrc = decodeURIComponent(params[0].split('=')[1])
 
@@ -258,11 +276,17 @@ async function puppeteer_imgs({
             return null;
         });
 
-        if(res) {
-            result.images.push(res);
+        if (res) {
+            result.data.images.push(res);
         }
     }
 
+    if(result.data.images.length == 0) {
+        const error = new Error('No image found.', 3, 'Images');
+        result.errors.push(error);
+    }
+
+    console.log(result);
 
     return result;
 }
@@ -283,11 +307,14 @@ async function puppeteer_price_carrefour({
      * The default data we send back to the client.
      */
     let result = {
-        gtin: data.gtin,
-        price: null,
-        found: false,
-        text: 'Product not found.',
-        retailer: 'Carrefour'
+        data: {
+            gtin: data.gtin,
+            price: null,
+            found: false,
+            text: 'Product not found.',
+            retailer: 'Carrefour'
+        },
+        errors: []
     };
 
     /**
@@ -310,7 +337,7 @@ async function puppeteer_price_carrefour({
      */
     await page.type('input[name="q"]', data.gtin + '\n', {
         delay: 20
-    })
+    });
 
     /**
      * Wait for the results to be displayed.
@@ -319,10 +346,12 @@ async function puppeteer_price_carrefour({
      * This selector matches with the price div.
      */
     try {
-        await page.waitForSelector('div[id="search"] div[class="g"] div[class="slp f"]', {
+        await page.waitForSelector('div[id="search"] div[class="g"]', {
             timeout: data.delay * 5
         });
-    } catch (error) {
+    } catch (e) {
+        const error = new Error('Product not found.', 2, 'Carrefour');
+        result.errors.push(error);
         return result;
     }
 
@@ -333,13 +362,19 @@ async function puppeteer_price_carrefour({
         if (document.querySelector('div[id="search"] div[class="g"] div[class="slp f"]') != null) {
             let stringPrice = document.querySelector('div[id="search"] div[class="g"] div[class="slp f"]').innerHTML.split('€')[0].trim();
             let priceToNumber = stringPrice.split(',');
-            result.price = parseFloat(priceToNumber[0] + '.' + priceToNumber[1]);
-            result.text = 'Product found.';
-            result.found = true;
+            result.data.price = parseFloat(priceToNumber[0] + '.' + priceToNumber[1]);
+            result.data.text = 'Product found.';
+            result.data.found = true;
         }
 
         return result;
     }, result);
+
+    if (!results.data.found) {
+        const error = new Error('Product not found.', 2, 'Carrefour');
+        results.errors.push(error);
+    }
+
     return results;
 }
 
@@ -359,13 +394,16 @@ async function puppeteer_price_auchan({
      * The default data we send back to the client.
      */
     let result = {
-        gtin: data.gtin,
-        price: null,
-        drive: '',
-        found: false,
-        zipcode: data.zipcode,
-        text: 'Product not found.',
-        retailer: 'Auchan'
+        data: {
+            gtin: data.gtin,
+            price: null,
+            drive: '',
+            found: false,
+            zipcode: data.zipcode,
+            text: 'Product not found.',
+            retailer: 'Auchan'
+        },
+        errors: []
     };
 
     /**
@@ -379,7 +417,7 @@ async function puppeteer_price_auchan({
      */
     await page.setExtraHTTPHeaders({
         'Cookie': '_cs_c=1; _cs_id=4889ec48-b2b4-a340-f84f-793bd6e2d5e4.1568727496.9.1569211224.1569211207.1.1602891496790; AuchanAPI=1; AuchanFR.searchHistory=W3sibGFiZWwiOiJudXRlbGxhIiwidXJsIjoiL3JlY2hlcmNoZT90ZXh0PW51dGVsbGEiLCJwaWN0dXJlIjpudWxsfSx7ImxhYmVsIjoiMzAxNzYyMDQyNTAzNSIsInVybCI6Ii9yZWNoZXJjaGU/dGV4dD0zMDE3NjIwNDI1MDM1IiwicGljdHVyZSI6bnVsbH1d; auchan.hamon=1; auchan.consentCookie=3; t2s-p=6ca94952-4aea-417f-95a8-b21337bb2ba2; _gcl_au=1.1.1907335488.1568727500; lark-b2cd=1; lark-consent=3; lark-cart=24cbb06c-d525-4af8-a5c5-891c849c24ac; JSESSIONID=CE1C7AFCB5F4EFF8CD28EF0F97BDEDBE-n2; LB=wasfo04; mediaRulesAB=none; htk_auchan_fr_visit=887z8927m2pg; htk_auchan_fr_first_visits=0001000000; AuchanFR.crossSell=6ca94952-4aea-417f-95a8-b21337bb2ba2; gtmEnvironnement=Web; connect.sid=s%3AFC_koDuYlY2IJT9H13BaoRxa786DGzyb.Z5yV5RGNuJLos9OMjfh4wGYJsbVHN%2F%2B%2B9jXzuW1JFtU; gtmUserAgent=true; _cs_s=3.0; disabledAuthCheck=true'
-    })
+    });
 
     /**
      * Goes to auchan.fr/recherche/gtin.
@@ -396,7 +434,9 @@ async function puppeteer_price_auchan({
         await page.waitForSelector('div[class="product-thumbnail__wrapper"] a', {
             timeout: data.delay * 5
         });
-    } catch (error) {
+    } catch (e) {
+        const error = new Error('Failed to load results when srapping.', 1, 'Chromium');
+        result.errors.push(error);
         return result;
     }
 
@@ -417,6 +457,8 @@ async function puppeteer_price_auchan({
      * If auchanID is null, the product doen't exist.
      */
     if (!auchanID) {
+        const error = new Error('Product not found.', 2, 'Auchan');
+        result.errors.push(error);
         return result;
     }
 
@@ -475,7 +517,7 @@ async function puppeteer_price_auchan({
         await page.type('input[id="search-input"]', auchanID + '\n', {
             delay: 20
         });
-    } catch (error) {
+    } catch (e) {
         /**
          * If this fails, we return the product as "not found".
          * 
@@ -489,6 +531,8 @@ async function puppeteer_price_auchan({
             });
             isNewVersion = true;
         } catch (err) {
+            const error = new Error('Product not found.', 2, 'Auchan');
+            result.errors.push(error);
             return result;
         }
     }
@@ -520,16 +564,22 @@ async function puppeteer_price_auchan({
         const results = await page.evaluate((result) => {
             if (document.querySelector('span[class="product-price__unit"]') != null && document.querySelector('span[class="product-price__cents"]') != null) {
                 let stringPrice = document.querySelector('span[class="product-price__unit"]').innerHTML + '.' + document.querySelector('span[class="product-price__cents"]').innerHTML;
-                result.price = parseFloat(stringPrice);
-                result.found = true;
-                result.text = `Product found.`;
+                result.data.price = parseFloat(stringPrice);
+                result.data.found = true;
+                result.data.text = `Product found.`;
             } else {
-                result.text = `Product locally not found.`;
+
+                result.data.text = `Product locally not found.`;
             }
-            result.drive = document.querySelector('div[class="journey__context-address"]').innerHTML.replace(/\\n/gi, '').trim();
+            result.data.drive = document.querySelector('div[class="journey__context-address"]').innerHTML.replace(/\\n/gi, '').trim();
 
             return result;
         }, result);
+
+        if (!results.data.found) {
+            const error = new Error('Product locally not found.', 404, 'Auchan');
+            results.errors.push(error);
+        }
 
         return results;
     } else {
@@ -545,7 +595,9 @@ async function puppeteer_price_auchan({
                 timeout: data.delay * 5
             });
         } catch {
-            result.text = 'Product locally not found.';
+            const error = new Error('Product locally not found.', 404, 'Auchan');
+            result.errors.push(error);
+            result.data.text = 'Product locally not found.';
             return result;
         }
 
@@ -558,16 +610,22 @@ async function puppeteer_price_auchan({
                 document.querySelector('p[class="price-standard"] span[class="price-standard__cents"]') != null) {
                 let stringPrice = document.querySelector('p[class="price-standard"] span[class="price-standard__decimal"]').innerHTML + document.querySelector('p[class="price-standard"] span[class="price-standard__cents"]').innerHTML;
                 let priceToNumber = stringPrice.split(',');
-                result.price = parseFloat(priceToNumber[0] + '.' + priceToNumber[1]);
-                result.found = true;
-                result.text = `Product found.`;
+                result.data.price = parseFloat(priceToNumber[0] + '.' + priceToNumber[1]);
+                result.data.found = true;
+                result.data.text = `Product found.`;
             } else {
-                result.text = `Product locally not found.`;
+                result.data.text = `Product locally not found.`;
             }
-            result.drive = document.querySelector('div[class="header__identity-pointOfService"] em').innerHTML.replace(/\\n/gi, '').trim();
+            result.data.drive = document.querySelector('div[class="header__identity-pointOfService"] em').innerHTML.replace(/\\n/gi, '').trim();
 
             return result;
         }, result)
+
+        if (!results.data.found) {
+            const error = new Error('Product locally not found.', 404, 'Auchan');
+            results.errors.push(error);
+        }
+
         return results;
     }
 };
@@ -588,12 +646,15 @@ async function puppeteer_price_leclerc({
      * The default data we send back to the client.
      */
     let result = {
-        price: null,
-        drive: '',
-        found: false,
-        zipcode: data.zipcode,
-        retailer: 'Leclerc',
-        text: 'Product not found.'
+        data: {
+            price: null,
+            drive: '',
+            found: false,
+            zipcode: data.zipcode,
+            retailer: 'Leclerc',
+            text: 'Product not found.'
+        },
+        errors: []
     };
 
     /**
@@ -617,6 +678,8 @@ async function puppeteer_price_leclerc({
             timeout: data.delay * 5
         });
     } catch (error) {
+        const error = new Error('Product not found.', 2, 'Leclerc');
+        result.errors.push(error);
         return result;
     }
 
@@ -640,6 +703,8 @@ async function puppeteer_price_leclerc({
      * If the full name is null, the product has not be found and we return the default result.
      */
     if (fullName == null) {
+        const error = new Error('Product not found.', 2, 'Leclerc');
+        result.errors.push(error);
         return result;
     }
 
@@ -729,7 +794,7 @@ async function puppeteer_price_leclerc({
         /**
          * The drive result.
          */
-        result.drive = document.querySelector('a[id="aWCSD333_PL"]').innerHTML.trim();
+        result.data.drive = document.querySelector('a[id="aWCSD333_PL"]').innerHTML.trim();
 
         /**
          * Get all results.
@@ -751,15 +816,20 @@ async function puppeteer_price_leclerc({
              * Computes the price from HTML Elements, configures result and stop the loop
              */
             if (finalName == fullName) {
-                result.price = parseFloat(products[i].querySelector('p[class="pWCRS310_PrixUnitaire"]').innerHTML.replace('€', '').trim());
-                result.found = true;
-                result.text = 'Product found.';
+                result.data.price = parseFloat(products[i].querySelector('p[class="pWCRS310_PrixUnitaire"]').innerHTML.replace('€', '').trim());
+                result.data.found = true;
+                result.data.text = 'Product found.';
                 break;
             }
         }
 
         return result;
     }, result, fullName);
+
+    if (!results.data.found) {
+        const error = new Error('Product not found.', 2, 'Leclerc');
+        results.errors.push(error);
+    }
 
     return results;
 };
@@ -780,12 +850,15 @@ async function puppeteer_price_magasinsu({
      * The default data we send back to the client.
      */
     let result = {
-        price: null,
-        drive: '',
-        found: false,
-        zipcode: data.zipcode,
-        retailer: 'Magasins-U',
-        text: 'Product not found.'
+        data: {
+            price: null,
+            drive: '',
+            found: false,
+            zipcode: data.zipcode,
+            retailer: 'Magasins-U',
+            text: 'Product not found.'
+        },
+        errors: []
     };
 
     /**
@@ -858,6 +931,8 @@ async function puppeteer_price_magasinsu({
             timeout: data.delay * 10
         });
     } catch {
+        const error = new Error('Product not found.', 2, 'Magasins-U');
+        result.errors.push(error);
         return result;
     }
 
@@ -874,14 +949,19 @@ async function puppeteer_price_magasinsu({
 
         if (document.querySelector('ul[id="search-result-items"] li') != null) {
             let stringPrice = document.querySelector('ul[id="search-result-items"] li span[class="sale-price"] span').innerHTML.split(',')[0] + '.' + document.querySelector('ul[id="search-result-items"] li span[class="sale-price"] sup').innerHTML
-            result.price = parseFloat(stringPrice);
-            result.found = true;
-            result.text = 'Product found.';
+            result.data.price = parseFloat(stringPrice);
+            result.data.found = true;
+            result.data.text = 'Product found.';
         }
 
-        result.drive = document.querySelector('nav span[class="store-name"]').innerHTML;
+        result.data.drive = document.querySelector('nav span[class="store-name"]').innerHTML;
         return result;
     }, result);
+
+    if (!results.data.found) {
+        const error = new Error('Product not found.', 2, 'Magasins-U');
+        results.errors.push(error);
+    }
 
     return results;
 };
@@ -902,12 +982,15 @@ async function puppeteer_price_intermarche({
      * The default data we send back to the client.
      */
     let result = {
-        price: null,
-        drive: '',
-        found: false,
-        zipcode: data.zipcode,
-        retailer: 'Intermarche',
-        text: 'Product not found.'
+        data: {
+            price: null,
+            drive: '',
+            found: false,
+            zipcode: data.zipcode,
+            retailer: 'Intermarche',
+            text: 'Product not found.'
+        },
+        errors: []
     };
 
     /**
@@ -948,6 +1031,8 @@ async function puppeteer_price_intermarche({
         })
     } catch (error) {
         result.text = 'No store found'
+        const error = new Error('No store found.', 5, 'Intermarché');
+        result.errors.push(error);
         return result;
     }
 
@@ -977,6 +1062,8 @@ async function puppeteer_price_intermarche({
             timeout: data.delay * 5
         });
     } catch {
+        const error = new Error('Product not found.', 2, 'Intermarché');
+        result.errors.push(error);
         return result;
     }
 
@@ -990,14 +1077,21 @@ async function puppeteer_price_intermarche({
             document.querySelector('.ReactModal__Content .product-price--decimal') != null) {
             let priceUnit = document.querySelector('.ReactModal__Content .product-price--integer').innerHTML;
             let priceDecimal = document.querySelector('.ReactModal__Content .product-price--decimal').innerHTML;
-            result.price = parseFloat(priceUnit + "." + priceDecimal);
-            result.found = true;
-            result.text = 'Product found';
+            result.data.price = parseFloat(priceUnit + "." + priceDecimal);
+            result.data.found = true;
+            result.data.text = 'Product found';
         }
-        result.drive = document.querySelector('button[class="sc-gPEVay gEcnxj"]').innerHTML.split("<svg")[0];
+
+        result.data.drive = document.querySelector('button[class="sc-gPEVay gEcnxj"]').innerHTML.split("<svg")[0];
 
         return result;
     }, result)
+
+    if (!results.data.found) {
+        const error = new Error('Product not found.', 2, 'Intermarché');
+        results.errors.push(error);
+    }
+
     return results;
 }
 
