@@ -63,6 +63,29 @@ const serve = async (app) => {
             serverSocket.emit('reportImages', params);
         });
 
+        socket.on('reportIngredients', async (gtin) => {
+            const product = await Product.findOne({gtin: gtin});
+            
+            if(product) {
+                let result;
+
+                result = product.ingredients[0].split('-').map(function(item) {
+                    return item.trim();
+                });;
+                console.log(result);
+
+                clientSocket.to(socket.id).emit('reportIngredientsResponse', result);
+            }
+        });
+
+        socket.on('updateIngredients', async (gtin, ingredients) => {
+            const product = await Product.findOne({gtin: gtin});
+
+            product.ingredients = ingredients;
+
+            await product.save();
+        });
+
         socket.on('updateImages', async (gtin, images) => {
             const product = await Product.findOne({gtin: gtin});
             console.log(product.images);

@@ -220,7 +220,6 @@ async function puppeteer_imgs({
          * Here's an example of what result we got after searching on google :
          * https://www.carrefour.fr/media/{X}x{Y}/Photosite/{category}/{image_name}_{image_number}.jpg?placeholder=1
          * https://courses-en-ligne.carrefour.fr/media/cache/{X}x{Y}/Photosite/{category}/{image_name}_{image_number}.jpg
-         * /!\ We can also have url like this : 
          * {X}x{Y} is the resolution.
          * {image_name} is the final image name, it doesn't really matter.
          * {image_number} is the number of the image. On some products, we can have up to 6 images, randomly sorted from 0 to 10 (or more ?).

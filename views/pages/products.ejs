@@ -5,15 +5,13 @@
     <% include ../partials/head %>
 </head>
 
-<body>
+<body class="bg-dark">
 
     <header>
         <%- include('../partials/nav', {active: 'Products'}) %>
     </header>
-    <br />
-    <br />
-    <section class="container-flat">
-        <div class="jumbotron flat" id="products">
+    <section class="text-white container-flat mt-4">
+        <div class="flat" id="products">
             <% if(locals.returnLink) { %>
                 <h3 class="text-center">All products in <a href="" class="capitalize"><%= category %></a></h3>
                 <a class="btn btn-link" href="<%= returnLink %>" id="returnLink">
@@ -26,23 +24,22 @@
             <% } else { %>
                 <h3 class="text-center">All products</h3>
             <% } %>
-            <hr>
-            <div class="products card-columns">
+
+            <div class="mt-4 products card-columns pr-4 pl-4">
                 <% products.forEach((product) => { %>
-                <div class="card m-2" style="width: 18rem;">
-                    <img src="<%= product.images[0] %>" class="card-img-top d-block text-center text-muted p-3"
+                <div class="bg-secondary card mt-2 mb-2">
+                    <img src="<%= product.images[0] %>" class="bg-white card-img-top d-block text-center  p-3"
                         alt="Image not available yet.">
                     <div class="card-body pt-1">
-                        <h5 class="card-title mb-0"><%= product.name %></h5>
-                        <small class="text-muted"><%= product.gtin %></small>
+                        <h5 class="card-title mb-0 mt-2"><%= product.name %></h5>
+                        <small class="mt-0"><%= product.gtin %></small>
                         <% var Carrefour = product.retailers.find((retailer) => {return retailer.name == 'Carrefour'}); %>
                         <% if (Carrefour) { %>
-                        <p class="card-text">Carrefour : <%= Carrefour.globalPrice %>€</p>
+                        <p class="card-text mt-2">Carrefour : <%= Carrefour.globalPrice %>€</p>
                         <% } else { %>
-                        <small class="text-muted d-block">Price not available yet</small>
+                        <small class="d-block">Price not available yet</small>
                         <% } %>
-                        <br />
-                        <a href="/products/<%= product.gtin %>" class="btn btn-primary">More details</a>
+                        <a href="/products/<%= product.gtin %>" class="notiflix-btn notiflix-btn-confirm">More details</a>
                     </div>
                 </div>
                 <% }); %>

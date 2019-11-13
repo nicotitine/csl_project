@@ -5,20 +5,17 @@
     <% include ../partials/head %>
 </head>
 
-<body>
+<body class="bg-dark">
 
     <header>
         <%- include('../partials/nav', {active: 'Categories'}) %>
     </header>
-    <br />
-    <br />
-    <section class="container-flat">
-        <div class="jumbotron flat">
+    <section class="container-flat text-white mt-4">
+        <div class="flat">
             <h3 class="text-center">Categories</h3>
-            <hr>
-            <div class="card-columns" id="categories">
+            <div class="card-columns p-4" id="categories">
                 <% categories.forEach((category) => { %>
-                <div class="card">
+                <div class="card bg-secondary mt-2 mb-2">
                     <div class="card-body">
                         <h5 class="card-title"><%= category.title %></h5>
                         <ul class="card-body mb-0">

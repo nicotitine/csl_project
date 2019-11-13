@@ -2,17 +2,69 @@
   text-transform: capitalize;
 }
 
+a {
+  color: white;
+  transition:  0.25s;
+}
+
+a:hover {
+  text-decoration: none;
+  color: #00b462;
+  
+}
+
+.notiflix-btn {
+  transition: all .15s ease-in-out;
+  cursor: pointer;
+  color: #fff;
+  background: #A9A9A9;
+  border: none;
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  /* box-shadow: 0 6px 20px -8px #000; */
+  transition: all .25s ease-in-out;
+  text-decoration: none;
+}
+
+.notiflix-btn:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.notiflix-btn-confirm {
+  background: #00b462;
+}
+
+.notiflix-btn-basic {
+  background: #A9A9A9;
+}
+
+.notiflix-btn-sm {
+  font-size: 12px !important;
+}
+
+.notiflix-btn-lg {
+  font-size: 16px;
+  padding: 8px 20px;
+}
+
+.notiflix-btn:hover {
+  box-shadow: inset 0 -60px 5px -5px rgba(0, 0, 0, .2);
+}
+
 section ul {
   list-style: none;
   line-height: 1.5em;
 }
 
 #categories li i {
-  color: #007bff;
+  color:#00b462;
   margin-right: 5px;
+  transition:  0.25s;
 }
 #categories li:hover > i {
-  color: #0056b3;;
+  color: #00b462;;
 }
 
 @media (min-width: 576px) {
@@ -35,10 +87,10 @@ section ul {
 
 @media (min-width: 1200px) {
   .card-columns {
-      column-count: 4;
+      column-count: 5;
   }
-  #products .card-columns {
-    column-count: 5;
+  #products .card-columns, #result {
+    column-count: 6;
   }
 }
 
@@ -46,9 +98,9 @@ section ul {
   font-size: 0.8em;
 }
 
-#product li i {
+#product li i, #reportIngredientsResponseModal li i {
   margin-right: 10px;
-  color: #212529;
+  color: #00b462;
 }
 
 .product-img {
@@ -82,3 +134,27 @@ ol.carousel-indicators li:hover,
   width: 100px;
 }
 
+
+.modal-footer {
+  border-top: none !important;
+}
+
+.modal-header {
+  border-bottom: none !important;
+}
+
+input:hover {
+  border-color: #00b462;
+}
+
+.notiflix input {
+  border-top-right-radius: 20px !important;
+  border-bottom-right-radius: 20px !important;
+  border-top-left-radius: 20px !important;
+  border-bottom-left-radius: 20px !important;
+}
+
+.form-control:focus {
+  border-color: #00b462;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 180, 18, 0.6);
+}

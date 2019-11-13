@@ -5,30 +5,30 @@
     <% include ../partials/head %>
 </head>
 
-<body>
+<body class="bg-dark">
 
     <header>
         <%- include('../partials/nav', {active: 'Search'}) %>
     </header>
-    <br />
-    <br />
-    <section class="container">
-        <div class="jumbotron">
+    <section class="container-flat mt-4 text-white">
+        <div class="flat">
             <h3 class="text-center">Search for product(s)</h3>
-            <hr>
-            <form class="text-center">
-                <div class="form-group text-center">
+            <form class="text-center ">
+                <div class="form-group row justify-content-center">
+                    <div class="col-xs-2 card bg-secondary p-4 mt-2 notiflix">
+                            <input type="text" class="form-control text-center" id="search" aria-describedby="searchHelp"
+                            placeholder="gtin, brand, name"/>
+                        <small id="searchHelp" class="form-text">To scrap new product, please provide a valid gtin.</small>
+                        <p class="mt-4">Results will be displayed bellow</p>
+                    </div>
                     <!-- <label for="exampleInputEmail1">Email address</label> -->
-                    <input type="text" class="form-control w-25 text-center" id="search" aria-describedby="searchHelp"
-                        placeholder="gtin, brand, name"/>
-                    <small id="searchHelp" class="form-text text-muted">To scrap new product, please provide gtin.</small>
+                   
                 </div>
-                <p>Results will be displayed bellow</p>
+                
             </form>
-            <hr>
-            <div>
+            <div class="mt-4">
                 <h3 class="text-center">Results</h3>
-                <div class="results card-columns" id="results">
+                <div class="pr-4 pl-4 results card-columns" id="results"></div>
 
                 </div>
                 <div id="resultsText">
@@ -54,24 +54,23 @@
             if(data.length > 0) {
                 for(let i = 0; i < data.length; i++) {
                     $('#results').append(`
-                        <div class="card m-2" style="width: 18rem;">
-                            <img src="${data[i].images[0]}" class="card-img-top d-block text-center text-muted m-2"
+                        <div class="card mb-2 mt-2 bg-secondary">
+                            <img src="${data[i].images[0]}" class="card-img-top product-img bg-white d-block text-center"
                                     alt="Image not available yet.">
                                 <div class="card-body pt-1">
                                     <h5 class="card-title mb-0">${data[i].name}</h5>
-                                    <small class="text-muted">${data[i].gtin}</small>
-                                    <br />
-                                    <a href="/products/${data[i].gtin}" class="btn btn-primary">More details</a>
+                                    <small class="">${data[i].gtin}</small>
+                                    <br/>
+                                    <a href="/products/${data[i].gtin}" class="d-inline-block mt-4 notiflix-btn notiflix-btn-confirm">More details</a>
                                 </div>
                             </div>
                     `)
                 }
             } else if ((/^\d+$/.test(req.term)) && (req.term.length == 8 || req.term.length == 12 || req.term.length == 13 || req.term.length == 14)) {
                 $('#resultsText').append(`
-                    <h3 class="text-center text-success mt-4">This is a valid gtin code...</h3>
-                    <br/>
-                    <div class="text-center">
-                        <a href="/products/${req.term}" class="btn btn-primary">Scrap it !</a>
+                    <h5 class="text-center text-success mt-4">This is a valid gtin code...</h5>
+                    <div class="text-center mt-3 mb-5">
+                        <a href="/products/${req.term}" class="notiflix-btn notiflix-btn-confirm">Scrap it !</a>
                     </div>
                     `)
             } else {

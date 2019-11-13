@@ -5,32 +5,33 @@
     <% include ../partials/head %>
 </head>
 
-<body>
+<body class="bg-dark">
 
     <header>
         <%- include('../partials/nav', {active: 'Products'}) %>
     </header>
 
-    <section class="container mt-5" id="app">
-        <div v-if="product" class="jumbotron pb-2 pt-4" id="product">
-            <h3>
+    <section class=" text-white bg-secondary container mt-5" id="app" style="border-radius: .3rem;">
+        <div v-if="product" class="pb-2 pt-4" id="product">
+            <h3 class="mb-0">
                 {{ product.name }} - {{ product.quantity }}
                 <small v-if="product.generic_name">
                     {{ product.generic_name }}
                 </small>
             </h3>
-            <small class="text-muted">{{ product.gtin }}</small>
-            <h4 id="brands">
+            <small class="">{{ product.gtin }}</small>
+            <h4 id="brands" class="mt-4">
                 Brands :
                 <small class="capitalize" v-for="brand in product.brand">
-                    <a class="mr-3" :href="urls.brand + brand">{{ brand }}</a>
+                    <a class="mr-3 notiflix-btn notiflix-btn-confirm notiflix-btn-sm"
+                        :href="urls.brand + brand">{{ brand }}</a>
                 </small>
             </h4>
 
-            <h4 id="categories">
+            <h4 id="categories" class="mt-4">
                 Categories :
                 <small class="capitalize" v-for="category in product.categories">
-                    <a class="capitalize mr-3"
+                    <a class="capitalize mr-3 notiflix-btn notiflix-btn-confirm notiflix-btn-sm"
                         :href="urls.categories + category">{{ category.charAt(0).toUpperCase() + category.slice(1) }}</a>
                 </small>
             </h4>
@@ -38,7 +39,7 @@
             <hr>
 
             <h3>Prices</h3>
-            <ul id="carrefourPrice">
+            <ul id="carrefourPrice" class="mt-3">
                 <li v-if="carrefour"><i class="fas fa-store"></i>Carrefour : {{ carrefour.globalPrice }}€</li>
                 <li v-else-if="loaders.carrefourPrice">
                     <div class=" text-center">
@@ -52,28 +53,32 @@
             </ul>
 
             <form class="needs-validation" id="zipcodeForm" @submit.prevent="submitZipcode">
-                <div class="form-row">
-                    <div class="col-md-4 mb-3">
+                    <p>Enter your zipcode to check for your local prices <br><small>(Your
+                            data is not
+                            stored)</small></p>
+                <div class="form-row notiflix">
+                    
+                    <div class="col-md-3 mb-0">
+
                         <div class="input-group">
-                            <label for="zipcodeInput">Enter your zipcode to check for your local prices <small>(Your
-                                    data is not
-                                    stored)</small></label>
+
                             <input v-model="userInput.zipcode" id="zipcodeInput" type="text" name="zipcodeInput"
                                 class="form-control" placeholder="Zipcode (Ex: 64000)" aria-label="zipcode"
                                 aria-describedby="basic-addon2" minlength="5" maxlength="5" required>
-                            <div class="input-group-append">
-                                <button id="zipcodeSubmitBtn" class="btn btn-outline-primary" type="submit"
+                            <div class="input-group-append ml-4">
+                                <button id="zipcodeSubmitBtn" class="notiflix-btn notiflix-btn-confirm" type="submit"
                                     href="#">Send</button>
                             </div>
                             <div class="invalid-feedback">
                                 Please choose a valid zipcode.
                             </div>
-                            <div><small>This can take a while (up to 30') and is not 100% successful</small></div>
+                            
                         </div>
 
                     </div>
 
                 </div>
+                <div class="mt-0"><small>This can take a while (up to 30') and is not 100% successful</small></div>
             </form>
 
             <hr>
@@ -81,8 +86,9 @@
             <h3 class="align-middle">
                 Images
                 <small id="imagesCount">({{ product.images.length }})</small>
-                <small v-if="product.images.length > 0" class="align-middle pb-1 ml-4"><a href="#" class="btn btn-link"
-                        @click.prevent="reportImages"><i class="fas fa-bug"></i> report</a></small>
+                <small v-if="product.images.length > 0" class="align-middle pb-1 ml-4"><a href="#"
+                        class="notiflix-btn notiflix-btn-confirm" @click.prevent="reportImages"><i
+                            class="fas fa-bug mr-1"></i> report</a></small>
             </h3>
             <div id="images">
                 <div v-if="product.images.length > 0 && !loaders.images" id="carousel" class="carousel slide"
@@ -117,8 +123,12 @@
 
             <hr>
 
-            <h3>Ingredients</h3>
-            <div id="ingredients">
+            <h3 class="align-middle">Ingredients
+                <small v-if="product.images.length > 0" class="align-middle pb-1 ml-4"><a href="#"
+                        class="notiflix-btn notiflix-btn-confirm" @click.prevent="reportIngredients"><i
+                            class="fas fa-bug mr-1"></i> report</a></small>
+            </h3>
+            <div id="ingredients" class="mt-4">
                 <ul>
                     <li v-for="ingredient in product.ingredients">
                         <i class="fas fa-carrot"></i>
@@ -175,8 +185,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <div v-if="reportResponse" id="carouselReport" class="carousel slide"
-                            data-ride="carousel">
+                        <div v-if="reportResponse" id="carouselReport" class="carousel slide" data-ride="carousel">
                             <ol class="carousel-indicators" id="carouselIndicators">
                                 <li v-for="(image, index) in reportResponse" data-target="#carouselReport"
                                     :data-slide-to="index">
@@ -200,8 +209,37 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary float-left" @click="closeReportResponseModal">Cancel</button>
+                        <button type="button" class="btn btn-secondary float-left"
+                            @click="closeReportResponseModal">Cancel</button>
                         <button type="button" class="btn btn-primary" @click="saveNewImages">Save !</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="reportIngredientsResponseModal" tabindex="-1" role="dialog"
+            aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="bg-dark modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Is that better ?</h4>
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span
+                                class="sr-only">Close</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div v-if="reportIngredientsResponse" id="" class=" ">
+                            <ul>
+                                <li v-for="ingredient in reportIngredientsResponse"><i
+                                        class="fas fa-carrot"></i>{{ ingredient}}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="notiflix-btn notiflix-btn-basic notiflix-btn-lg float-left"
+                            @click="closeReportIngredientsResponseModal">Cancel</button>
+                        <button type="button" class="notiflix-btn notiflix-btn-confirm notiflix-btn-lg"
+                            @click="saveNewIngredients">Save !</button>
                     </div>
                 </div>
             </div>
@@ -254,6 +292,7 @@
                         images: false
                     },
                     reportResponse: null,
+                    reportIngredientsResponse: null,
                     socket: null
                 }
             },
@@ -298,6 +337,13 @@
                         this.product = data;
                         this.loaders.product = false;
                     }
+                });
+
+                this.socket.on('reportIngredientsResponse', async (response) => {
+                    console.log(response);
+                    this.reportIngredientsResponse = response;
+                    $('#reportIngredientsResponseModal').modal('show');
+
                 })
 
                 this.socket.on('getPriceCarrefourResponse', async (response) => {
@@ -412,6 +458,20 @@
                 closeReportResponseModal() {
                     this.reportResponse = null;
                     $("#reportResponseModal").modal('hide');
+                },
+                reportIngredients() {
+                    console.log('reporting');
+
+                    this.socket.emit('reportIngredients', this.product.gtin);
+                },
+                saveNewIngredients() {
+                    this.product.ingredients = this.reportIngredientsResponse;
+                    $('#reportIngredientsResponseModal').modal('hide');
+                    this.socket.emit('updateIngredients', this.product.gtin, this.product.ingredients);
+                },
+                closeReportIngredientsResponseModal() {
+                    this.reportIngredientsResponse = null;
+                    $('#reportIngredientsResponseModal').modal('hide');
                 }
             }
         });
