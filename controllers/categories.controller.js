@@ -30,7 +30,7 @@ const listAlphabetically = async (req, res) => {
     })()
     res.render('pages/categories', {
       'page': req.url,
-      'categories': categories
+      'categories': JSON.stringify(categories)
     });
   });
 };

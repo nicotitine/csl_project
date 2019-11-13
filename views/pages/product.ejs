@@ -10,9 +10,9 @@
     <header>
         <%- include('../partials/nav', {active: 'Products'}) %>
     </header>
-
+    <br>
     <section class=" text-white bg-secondary container mt-5" id="app" style="border-radius: .3rem;">
-        <div v-if="product" class="pb-2 pt-4" id="product">
+        <div v-if="product" class="pb-4 pt-4 pr-4 pl-4" id="product">
             <h3 class="mb-0">
                 {{ product.name }} - {{ product.quantity }}
                 <small v-if="product.generic_name">
@@ -28,7 +28,7 @@
                 </small>
             </h4>
 
-            <h4 id="categories" class="mt-4">
+            <h4 id="categories" class="mt-4 mb-4">
                 Categories :
                 <small class="capitalize" v-for="category in product.categories">
                     <a class="capitalize mr-3 notiflix-btn notiflix-btn-confirm notiflix-btn-sm"
