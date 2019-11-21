@@ -1,24 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!-- HEAD -->
 <head>
     <% include ../partials/head %>
 </head>
 
 <body class="bg-dark">
 
+    <!-- NAVIGATION -->
     <header>
         <%- include('../partials/nav', {active: 'Categories'}) %>
     </header>
+    
     <br>
+
+    <!-- MAIN SECTION -->
     <section class="container-flat text-white mt-5" id="app">
         <div class="flat">
+            <!-- MAIN TITLE -->
             <h3 class="text-center">Categories</h3>
+            <!-- CATEGORIES CONTAINER -->
             <div class="card-columns p-4" id="categories">
+                <!-- CATEGORIES (CARD) - ALPHABETICALY SORTED -->
                 <div v-for="category in categories" class="card bg-secondary mt-2 mb-2">
+                    <!-- CARD BODY -->
                     <div class="card-body">
-                        <h5 class="card-title">{{ category.title %> }}</h5>
+                        <h5 class="card-title">{{ category.title }}</h5>
                         <ul class="card-body mb-0">
+                            <!-- CATEGORIES LIST FOR A GIVEN LETTER -->
                             <li v-for="cat in category.data">
                                 <i class="fas fa-folder-open"></i>
                                 <a :href="links.category + cat.name"
@@ -31,12 +41,15 @@
         </div>
     </section>
 
+    <!-- FOOTER -->
     <footer>
         <% include ../partials/footer %>
     </footer>
+
     <script src="https://code.jquery.com/jquery-3.4.1.js"
         integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    
+    <!-- VUE.JS SCRIPT -->
     <script>
 
         const app = new Vue({

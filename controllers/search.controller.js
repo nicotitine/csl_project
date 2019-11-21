@@ -6,6 +6,8 @@ const get = async (req, res) => {
 
 const autocompletion = async (req, res) => {
   try {
+    console.log(req.query);
+    
     const regex = new RegExp(req.query['term'], 'i');
     
     await Product.find({

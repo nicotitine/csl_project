@@ -1,202 +1,395 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!-- HEAD -->
+
 <head>
     <% include ../partials/head %>
 </head>
 
 <body class="bg-dark">
 
+    <!-- NAVIGATION -->
     <header>
         <%- include('../partials/nav', {active: 'Products'}) %>
     </header>
+
     <br>
+
+    <!-- MAIN SECTION -->
     <section class=" text-white bg-secondary container mt-5" id="app" style="border-radius: .3rem;">
+
+        <!-- MAIN CONTAINER -->
         <div v-if="product" class="pb-4 pt-4 pr-4 pl-4" id="product">
+
+            <!-- MAIN TITLE - PRODUCT NAME AND QUANTITY -->
             <h3 class="mb-0">
+
+                <!-- NAME & QUANTITY TEXT -->
                 {{ product.name }} - {{ product.quantity }}
+
                 <small v-if="product.generic_name">
+
+                    <!-- GENERIC NAME TEXT -->
                     {{ product.generic_name }}
                 </small>
             </h3>
-            <small class="">{{ product.gtin }}</small>
+
+            <!-- PRODUCT GTIN -->
+            <small class="">
+                
+                <!-- GTIN TEXT -->
+                {{ product.gtin }}
+            </small>
+
+            <!-- PRODUCT BRANDS -->
             <h4 id="brands" class="mt-4">
                 Brands :
+
+                <!-- BRANDS LIST -->
                 <small class="capitalize" v-for="brand in product.brand">
-                    <a class="mr-3 notiflix-btn notiflix-btn-confirm notiflix-btn-sm"
-                        :href="urls.brand + brand">{{ brand }}</a>
+
+                    <!-- BRAND LINK -->
+                    <a class="mr-3 notiflix-btn notiflix-btn-confirm notiflix-btn-sm" :href="urls.brand + brand">
+                        
+                        <!-- BRAND TEXT -->
+                        {{ brand }}
+                    </a>
                 </small>
             </h4>
 
+            <!-- PRODUCT CATEGORIES -->
             <h4 id="categories" class="mt-4 mb-4">
                 Categories :
+
+                <!-- CATEGORIES LIST -->
                 <small class="capitalize" v-for="category in product.categories">
-                    <a class="capitalize mr-3 notiflix-btn notiflix-btn-confirm notiflix-btn-sm"
-                        :href="urls.categories + category">{{ category.charAt(0).toUpperCase() + category.slice(1) }}</a>
+
+                    <!-- CATEGORY LINK -->
+                    <a class="capitalize mr-3 notiflix-btn notiflix-btn-confirm notiflix-btn-sm" :href="urls.categories + category">
+                        
+                        <!-- CATEGORY TEXT -->
+                        {{ category.charAt(0).toUpperCase() + category.slice(1) }}
+                    </a>
                 </small>
             </h4>
 
             <hr>
 
-            <h3>Prices</h3>
-            <ul id="carrefourPrice" class="mt-3">
-                <li v-if="carrefour"><i class="fas fa-store"></i>Carrefour : {{ carrefour.globalPrice }}€</li>
-                <li v-else-if="loaders.carrefourPrice">
-                    <div class=" text-center">
-                        <img src="/loader.svg" alt="" class="loader">
-                        <h5>Loading...</h5>
-                    </div>
-                </li>
-                <li v-if="errors.carrefourPrice"><i class="fas fa-store"></i>Carrefour : Product not found. <a
-                        @click="retryCarrefourPrice" href="#" class="btn btn-primary"><i style="color: --primary"
-                            class="fas fa-redo"></i>retry</a></li>
-            </ul>
+            <!-- PRODUCT PRICES -->
+            <div>
 
-            <form class="needs-validation" id="zipcodeForm" @submit.prevent="submitZipcode">
+                <!-- TITLE -->
+                <h3>Prices</h3>
+
+                <!-- CARREFOUR PRICE CONTAINER -->
+                <ul id="carrefourPrice" class="mt-3">
+
+                    <!-- CARREFOUR PRICE -->
+                    <li v-if="carrefour">
+                        
+                        <!-- STORE ICON -->
+                        <i class="fas fa-store"></i>
+                        
+                        <!-- PRICE TEXT -->
+                        Carrefour : {{ carrefour.globalPrice }}€
+                    </li>
+
+                    <!-- CARREFOUR PRICE LOADER -->
+                    <li v-else-if="loaders.carrefourPrice">
+                        <div class=" text-center">
+
+                            <!-- LOADER IMAGE -->
+                            <img src="/loader.svg" alt="" class="loader">
+
+                            <!-- LOADER TEXT -->
+                            <h5>Loading...</h5>
+                        </div>
+                    </li>
+
+                    <!-- CARREFOUR PRICE ERROR -->
+                    <li v-if="errors.carrefourPrice">
+                        
+                        <!-- STORE ICON -->
+                        <i class="fas fa-store"></i>
+
+                        <!-- ERROR TEXT -->
+                        Carrefour : Product not found. 
+
+                        <!-- RETRY BUTTON -->
+                        <a @click="retryCarrefourPrice" href="#" class="btn btn-primary">
+                            
+                            <!-- RETRY ICON -->
+                            <i style="color: --primary" class="fas fa-redo"></i>
+                            
+                            <!-- RETRY TEXT -->
+                            retry
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- ZIPCODE FORM -->
+                <form class="needs-validation" id="zipcodeForm" @submit.prevent="submitZipcode">
+
+                    <!-- INFORMATIVE TEXT -->
                     <p>Enter your zipcode to check for your local prices <br><small>(Your
                             data is not
                             stored)</small></p>
-                <div class="form-row notiflix">
-                    
-                    <div class="col-md-3 mb-0">
 
-                        <div class="input-group">
+                    <!-- FORM CONTAINER -->
+                    <div class="form-row notiflix">
+                        <div class="col-md-3 mb-0">
+                            <div class="input-group">
 
-                            <input v-model="userInput.zipcode" id="zipcodeInput" type="text" name="zipcodeInput"
-                                class="form-control" placeholder="Zipcode (Ex: 64000)" aria-label="zipcode"
-                                aria-describedby="basic-addon2" minlength="5" maxlength="5" required>
-                            <div class="input-group-append ml-4">
-                                <button id="zipcodeSubmitBtn" class="notiflix-btn notiflix-btn-confirm" type="submit"
-                                    href="#">Send</button>
+                                <!-- INPUT -->
+                                <input v-model="userInput.zipcode" id="zipcodeInput" type="text" name="zipcodeInput"
+                                    class="form-control" placeholder="Zipcode (Ex: 64000)" aria-label="zipcode"
+                                    aria-describedby="basic-addon2" minlength="5" maxlength="5" required>
+
+                                <!-- SEND BUTTON -->
+                                <div class="input-group-append ml-4">
+                                    <button id="zipcodeSubmitBtn" class="notiflix-btn notiflix-btn-confirm" type="submit" href="#">
+                                        
+                                        <!-- SEND ICON -->
+                                        <i class="fas fa-paper-plane mr-1"></i>
+                                        
+                                        <!-- SEND TEXT -->
+                                        Send
+                                    </button>
+                                </div>
+
+                                <!-- ERROR TEXT -->
+                                <div class="invalid-feedback">
+                                    Please choose a valid zipcode.
+                                </div>
                             </div>
-                            <div class="invalid-feedback">
-                                Please choose a valid zipcode.
+                        </div>
+                    </div>
+
+                    <!-- INFORMATIVE TEXT -->
+                    <div class="mt-0"><small>This can take a while (up to 30') and is not 100% successful</small></div>
+                </form>
+            </div>
+
+
+            <hr>
+
+            <!-- PRODUCT IMGAGES -->
+            <div>
+
+                <!-- TITLE -->
+                <h3 class="align-middle">
+                    Images
+
+                    <!-- IMAGE COUNT -->
+                    <small id="imagesCount">({{ product.images.length }})</small>
+
+                    <!-- REPORT BUTTON -->
+                    <small v-if="product.images.length > 0" class="align-middle pb-1 ml-4">
+                        <a href="#" class="notiflix-btn notiflix-btn-confirm" @click.prevent="reportImages">
+
+                            <!-- REPORT ICON -->
+                            <i class="fas fa-bug mr-1"></i> 
+
+                            <!-- REPORT TEXT -->
+                            report
+                        </a>
+                    </small>
+                </h3>
+
+                <!-- IMAGES CONTAINER -->
+                <div id="images">
+
+                    <!-- CAROUSEL -->
+                    <div v-if="product.images.length > 0 && !loaders.images" id="carousel" class="carousel slide"
+                        data-ride="carousel">
+
+                        <!-- CAROUSEL INDICATORS -->
+                        <ol class="carousel-indicators" id="carouselIndicators">
+                            <li v-for="(image, index) in product.images" data-target="#carousel" :data-slide-to="index">
+                            </li>
+                        </ol>
+
+                        <!-- CAROUSEL IMAGES -->
+                        <div class="carousel-inner" id="carouselWrapper">
+                            <div v-for="(image, index) in product.images" class="carousel-item text-center"
+                                v-bind:class="{ active: index == 0 }">
+                                <img :src="image" alt="" class="product-img" @click="openImgModal">
                             </div>
+                        </div>
+
+                        <!-- CAROUSEL CONTROLS (<  >) -->
+                        <a class="carousel-control-prev color-dark" href="#carousel" role="button" data-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="carousel-control-next" href="#carousel" role="button" data-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    </div>
+
+                    <!-- IMAGES LOADER -->
+                    <div v-else-if="loaders.images" class="text-center">
+
+                        <!-- LOADER IMAGE -->
+                        <img class="loader" src="/loader.svg" alt="">
+
+                        <!-- LOADER TEXT -->
+                        <h5>Loading...</h5>
+                    </div>
+
+                    <!-- NO IMAGES TEXT -->
+                    <div v-else class="text-center">
+                        <h5>No image found...</h5>
+                    </div>
+                </div>
+            </div>
+
+
+            <hr>
+
+            <!-- PRODUCT INGREDIENTS -->
+            <div>
+                <!-- TITLE -->
+                <h3 class="align-middle">
+                    Ingredients
+
+                    <!-- REPORT BUTTON -->
+                    <small v-if="product.images.length > 0" class="align-middle pb-1 ml-4">
+                        <a href="#" class="notiflix-btn notiflix-btn-confirm" @click.prevent="reportIngredients">
+
+                            <!-- REPORT ICON -->
+                            <i class="fas fa-bug mr-1"></i>
                             
-                        </div>
+                            <!-- REPORT TEXT -->
+                            report
+                        </a>
+                    </small>
+                </h3>
 
-                    </div>
+                <!-- INGREDIENTS CONTAINER -->
+                <div id="ingredients" class="mt-4">
+                    <ul>
 
-                </div>
-                <div class="mt-0"><small>This can take a while (up to 30') and is not 100% successful</small></div>
-            </form>
+                        <!-- INGREDIENTS LIST -->
+                        <li v-for="ingredient in product.ingredients">
 
-            <hr>
+                            <!-- INGREDIENT ICON -->
+                            <i class="fas fa-carrot"></i>
 
-            <h3 class="align-middle">
-                Images
-                <small id="imagesCount">({{ product.images.length }})</small>
-                <small v-if="product.images.length > 0" class="align-middle pb-1 ml-4"><a href="#"
-                        class="notiflix-btn notiflix-btn-confirm" @click.prevent="reportImages"><i
-                            class="fas fa-bug mr-1"></i> report</a></small>
-            </h3>
-            <div id="images">
-                <div v-if="product.images.length > 0 && !loaders.images" id="carousel" class="carousel slide"
-                    data-ride="carousel">
-                    <ol class="carousel-indicators" id="carouselIndicators">
-                        <li v-for="(image, index) in product.images" data-target="#carousel" :data-slide-to="index">
+                            <!-- INGREDIENT TEXT -->
+                            <span class="capitalize">
+                                {{ ingredient }}
+                            </span>
                         </li>
-                    </ol>
-                    <div class="carousel-inner" id="carouselWrapper">
-                        <div v-for="(image, index) in product.images" class="carousel-item text-center"
-                            v-bind:class="{ active: index == 0 }">
-                            <img :src="image" alt="" class="product-img" @click="openImgModal">
-                        </div>
-                    </div>
-                    <a class="carousel-control-prev color-dark" href="#carousel" role="button" data-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="sr-only">Previous</span>
-                    </a>
-                    <a class="carousel-control-next" href="#carousel" role="button" data-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="sr-only">Next</span>
-                    </a>
-                </div>
-                <div v-else-if="loaders.images" class="text-center">
-                    <img class="loader" src="/loader.svg" alt="">
-                    <h5>Loading...</h5>
-                </div>
-                <div v-else class="text-center">
-                    <h5>No image found...</h5>
+                    </ul>
                 </div>
             </div>
 
+
             <hr>
 
-            <h3 class="align-middle">Ingredients
-                <small v-if="product.images.length > 0" class="align-middle pb-1 ml-4"><a href="#"
-                        class="notiflix-btn notiflix-btn-confirm" @click.prevent="reportIngredients"><i
-                            class="fas fa-bug mr-1"></i> report</a></small>
-            </h3>
-            <div id="ingredients" class="mt-4">
-                <ul>
-                    <li v-for="ingredient in product.ingredients">
-                        <i class="fas fa-carrot"></i>
-                        <span class="capitalize">
-                            {{ ingredient }}
-                        </span>
-                    </li>
-                </ul>
+            <!-- QUANTITY CONTAINER -->
+            <div>
+
+                <!-- TITLE -->
+                <h3>Quantity</h3>
+
+                <!-- QUANTITY -->
+                <p>{{ product.quantity }}</p>
             </div>
-
-            <hr>
-
-            <h3>Quantity</h3>
-            <p>{{ product.quantity }}</p>
+            
 
 
         </div>
 
+        <!-- PRODUCT LOADER -->
         <div v-else-if="loaders.product">
             <div class="text-center">
+
+                <!-- LOADER IMAGE -->
                 <img src="/loader.svg" alt="">
+
+                <!-- LOADER TEXT -->
                 <h4>Loading...</h4>
             </div>
         </div>
 
-        <div v-if="product" class="modal fade" id="productGalery" tabindex="-1" role="dialog"
-            aria-labelledby="myModalLabel" aria-hidden="true">
+
+        <!-- IMAGE VIEWER MODAL -->
+        <div v-if="product" class="modal fade" id="productGalery" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
+
+                    <!-- MODAL HEADER -->
                     <div class="modal-header">
+
+                        <!-- MODAL TITLE -->
                         <h4 class="modal-title">{{ product.name }}</h4>
+
+                        <!-- DISMISS BUTTON -->
                         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span
                                 class="sr-only">Close</span>
                         </button>
                     </div>
+
+                    <!-- MODAL BODY -->
                     <div class="modal-body">
+
+                        <!-- IMAGE -->
                         <img id="productGaleryImage" class="img-responsive col-md-12" :src="userInput.imageClicked">
                     </div>
+
+                    <!-- MODAL FOOTER -->
                     <div class="modal-footer">
+
+                        <!-- DISMISS BUTTON -->
                         <button type="button" class="btn btn-secondary float-left" id="closeModal">Close</button>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- ON REPORT IMAGES RESPONSE MODAL -->
         <div class="modal fade" id="reportResponseModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
             aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
+                    <!-- MODAL HEADER -->
                     <div class="modal-header">
+
+                        <!-- MODAL TITLE -->
                         <h4 class="modal-title">New images</h4>
+
+                        <!-- DISMISS BUTTON -->
                         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span
                                 class="sr-only">Close</span>
                         </button>
                     </div>
+
+                    <!-- MODAL BODY -->
                     <div class="modal-body">
+
+                        <!-- CAROUSEL CONTAINER -->
                         <div v-if="reportResponse" id="carouselReport" class="carousel slide" data-ride="carousel">
+
+                            <!-- CAROUSEL INDICATORS -->
                             <ol class="carousel-indicators" id="carouselIndicators">
                                 <li v-for="(image, index) in reportResponse" data-target="#carouselReport"
                                     :data-slide-to="index">
                                 </li>
                             </ol>
+
+                            <!-- CAROUSEL IMAGES -->
                             <div class="carousel-inner" id="carouselWrapper">
                                 <div v-for="(image, index) in reportResponse" class="carousel-item text-center"
                                     v-bind:class="{ active: index == 0 }">
                                     <img :src="image" alt="" class="product-img">
                                 </div>
                             </div>
+
+                            <!-- CAROUSEL CONTROLS (<  >) -->
                             <a class="carousel-control-prev color-dark" href="#carouselReport" role="button"
                                 data-slide="prev">
                                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -208,36 +401,65 @@
                             </a>
                         </div>
                     </div>
+
+                    <!-- MODAL FOOTER -->
                     <div class="modal-footer">
+
+                        <!-- DISMISS BUTTON -->
                         <button type="button" class="btn btn-secondary float-left"
                             @click="closeReportResponseModal">Cancel</button>
+
+                        <!-- SAVE CHANGES BUTTON -->
                         <button type="button" class="btn btn-primary" @click="saveNewImages">Save !</button>
                     </div>
                 </div>
             </div>
         </div>
 
+
+        <!-- ON REPORT INGREDIENTS MODAL -->
         <div class="modal fade" id="reportIngredientsResponseModal" tabindex="-1" role="dialog"
             aria-labelledby="myModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="bg-dark modal-content">
+
+                    <!-- MODAL HEADER -->
                     <div class="modal-header">
+                        
+                        <!-- MODAL TITLE -->
                         <h4 class="modal-title">Is that better ?</h4>
+
+                        <!-- DISMISS BUTTON -->
                         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span
                                 class="sr-only">Close</span>
                         </button>
                     </div>
+
+                    <!-- MODAL BODY -->
                     <div class="modal-body">
                         <div v-if="reportIngredientsResponse" id="" class=" ">
+
+                            <!-- INGREDIENTS LIST -->
                             <ul>
-                                <li v-for="ingredient in reportIngredientsResponse"><i
-                                        class="fas fa-carrot"></i>{{ ingredient}}</li>
+                                <li v-for="ingredient in reportIngredientsResponse">
+
+                                    <!-- INGREDIENT ICON -->
+                                    <i class="fas fa-carrot"></i>
+                                    
+                                    <!-- INGREDIENT TEXT -->
+                                    {{ ingredient}}
+                                </li>
                             </ul>
                         </div>
                     </div>
+
+                    <!-- MODAL FOOTER -->
                     <div class="modal-footer">
+                        <!-- DISMISS BUTTON -->
                         <button type="button" class="notiflix-btn notiflix-btn-basic notiflix-btn-lg float-left"
                             @click="closeReportIngredientsResponseModal">Cancel</button>
+
+                        <!-- SAVE CHANGES BUTTON -->
                         <button type="button" class="notiflix-btn notiflix-btn-confirm notiflix-btn-lg"
                             @click="saveNewIngredients">Save !</button>
                     </div>
@@ -247,20 +469,23 @@
     </section>
 
 
-
+    <!-- FOOTER -->
     <footer>
         <% include ../partials/footer %>
     </footer>
+
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
-    </script>
+        </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
         integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
-    </script>
+        </script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
-    </script>
+        </script>
     <script src="/socket.io/socket.io.js"></script>
+
+    <!-- VUE.JS SCRIPT -->
     <script>
         const app = new Vue({
             el: '#app',
@@ -358,10 +583,10 @@
                         }
                         this.carrefour.globalPrice = this.carrefour.globalPrice.toLocaleString(
                             'en', {
-                                minimumIntegerDigits: 1,
-                                minimumFractionDigits: 2,
-                                useGrouping: false
-                            });
+                            minimumIntegerDigits: 1,
+                            minimumFractionDigits: 2,
+                            useGrouping: false
+                        });
 
                     }
 

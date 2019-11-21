@@ -5,7 +5,7 @@ const list = async (req, res) => {
 
   if(products) {
     res.render('pages/products', {
-      'products': products
+      'products': JSON.stringify(products)
     });
   }
 };
@@ -48,9 +48,12 @@ const getByBrand = async (req, res) => {
   }
   const products = await Product.find(query);
 
+  console.log(products);
+  
+
   if(products) {
     res.render('pages/products', {
-      'products': products,
+      'products': JSON.stringify(products),
       'category': req.params.brand
     });
   }

@@ -1,59 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!-- HEAD -->
 <head>
     <% include ../partials/head %>
 </head>
 
 <body class="bg-dark">
 
+    <!-- NAVIGATION -->
     <header>
         <%- include('../partials/nav', {active: 'Products'}) %>
     </header>
-    <br>
-    <section class="text-white container-flat mt-5">
-        <div class="flat" id="products">
-            <% if(locals.returnLink) { %>
-                <h3 class="text-center">All products in <a href="" class="capitalize"><%= category %></a></h3>
-                <a class="btn btn-link" href="<%= returnLink %>" id="returnLink">
-                    <% if(locals.productName) { %>
-                        Return to <%= productName %>
-                    <% } else {%>
-                        Return to <%= returnLink.replace('/', '') %>
-                    <% } %>
-                </a>
-            <% } else { %>
-                <h3 class="text-center">All products</h3>
-            <% } %>
 
+    <br>
+
+    <!-- MAIN SECTION -->
+    <section class="text-white container-flat mt-5" id="app">
+        <div class="flat" id="products">
+
+            <!-- MAIN TITLE -->
+            <h3 class="text-center">All products</h3>
+
+            <!-- PRODUCTS CONTAINER -->
             <div class="mt-4 products card-columns pr-4 pl-4">
-                <% products.forEach((product) => { %>
-                <div class="bg-secondary card mt-2 mb-2">
-                    <img src="<%= product.images[0] %>" class="bg-white card-img-top d-block text-center  p-3"
+
+                <!-- PRODUCT CARD -->
+                <div v-for="product in products" class="bg-secondary card mt-2 mb-2">
+
+                    <!-- CARD HEADER -->
+                    <img :src="product.images[0]" class="bg-white card-img-top d-block text-center  p-3"
                         alt="Image not available yet.">
+
+                    <!-- CARD BODY -->
                     <div class="card-body pt-1">
-                        <h5 class="card-title mb-0 mt-2"><%= product.name %></h5>
-                        <small class="mt-0"><%= product.gtin %></small>
-                        <% var Carrefour = product.retailers.find((retailer) => {return retailer.name == 'Carrefour'}); %>
-                        <% if (Carrefour) { %>
-                        <p class="card-text mt-2">Carrefour : <%= Carrefour.globalPrice %>€</p>
-                        <% } else { %>
-                        <small class="d-block">Price not available yet</small>
-                        <% } %>
-                        <a href="/products/<%= product.gtin %>" class="notiflix-btn notiflix-btn-confirm">More details</a>
+
+                        <!-- PRODUCT NAME -->
+                        <h5 class="card-title mb-0 mt-2">{{ product.name }}</h5>
+
+                        <!-- PRODUCT GTIN -->
+                        <small class="mt-0">{{ product.gtin }}</small>
+
+                        <!-- PRODUCT CARREFOUR PRICE -->
+                        <p v-if="getCarrefourPrice(product)" class="card-text mt-2">Carrefour : {{ getCarrefourPrice(product) }}€</p>
+
+                        <!-- PRODUCT PRICE NOT AVAILABLE -->
+                        <p v-else class="mt-2"><small class="d-block">Price not available yet</small></p>
+
+                        <!-- DETAILS BUTTON -->
+                        <a :href="links.products + product.gtin" class="notiflix-btn notiflix-btn-confirm">More
+                            details</a>
                     </div>
                 </div>
-                <% }); %>
             </div>
         </div>
     </section>
 
+    <!-- FOOTER -->
     <footer>
         <% include ../partials/footer %>
     </footer>
     <script src="https://code.jquery.com/jquery-3.4.1.js"
         integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
     <script src="/socket.io/socket.io.js"></script>
+
+    <!-- VUE.JS SCRIPT -->
+    <script>
+        const app = new Vue({
+            el: '#app',
+            data: () => {
+                return {
+                    products: null,
+                    links: {
+                        products: '/products/'
+                    }
+                }
+            },
+            mounted() {
+                this.products = JSON.parse(`<%- products %>`);
+            },
+            methods: {
+                getCarrefourPrice(product) {
+                    
+                    const carrefour = product.retailers.find((retailer) => {
+                        return retailer.name == 'Carrefour';
+                    });
+
+                    if(carrefour) {
+                        return carrefour.globalPrice;
+                    }
+
+                    return false;
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>
