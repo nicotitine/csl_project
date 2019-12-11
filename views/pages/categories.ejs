@@ -18,21 +18,38 @@
     <!-- MAIN SECTION -->
     <section class="container-flat text-white mt-5" id="app">
         <div class="flat">
+
             <!-- MAIN TITLE -->
             <h3 class="text-center">Categories</h3>
+
             <!-- CATEGORIES CONTAINER -->
             <div class="card-columns p-4" id="categories">
+
                 <!-- CATEGORIES (CARD) - ALPHABETICALY SORTED -->
                 <div v-for="category in categories" class="card bg-secondary mt-2 mb-2">
+
                     <!-- CARD BODY -->
                     <div class="card-body">
-                        <h5 class="card-title">{{ category.title }}</h5>
-                        <ul class="card-body mb-0">
+
+                        <!-- CARD TITLE -->
+                        <h5 class="card-title">
+
+                            <!-- TITLE TEXT (LETTER) -->
+                            {{ category.title }}
+                        </h5>
+                        <ul class="mb-0 pl-2">
                             <!-- CATEGORIES LIST FOR A GIVEN LETTER -->
                             <li v-for="cat in category.data">
+
+                                <!-- CATEGORY ICON -->
                                 <i class="fas fa-folder-open"></i>
-                                <a :href="links.category + cat.name"
-                                    class="capitalize">{{ cat.name }}</a>
+
+                                <!-- CATEGORY LINK -->
+                                <a :href="links.category + cat.name" class="capitalize">
+                                    
+                                    <!-- CATEGORY TEXT -->
+                                    {{ cat.name }}
+                                </a>
                             </li>
                         </ul>
                     </div>
@@ -46,26 +63,18 @@
         <% include ../partials/footer %>
     </footer>
 
+    <!-- EJS CATEGORIES VARIABLE (WILL BE REMOVED USING JS) -->
+    <div id="categoriesVariable" hidden>
+        <%= categories %>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.4.1.js"
         integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
     
     <!-- VUE.JS SCRIPT -->
-    <script>
+    <script src="/scripts/categories.vue.js">
 
-        const app = new Vue({
-            el: '#app',
-            data: () => {
-                return {
-                    categories: null,
-                    links: {
-                        category : '/categories/'
-                    }
-                }
-            },
-            mounted() {
-                this.categories = JSON.parse('<%- categories %>');                
-            }
-        });
+       
     </script>
 </body>
 

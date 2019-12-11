@@ -4,6 +4,11 @@
 const express = require('express');
 
 /**
+ * Controllers import.
+ */
+const productsController = require('../controllers/products.controller');
+
+/**
  * Router creation.
  */
 const router = express.Router();
@@ -11,9 +16,7 @@ const router = express.Router();
 /**
  * Routing for '/'.
  */
-router.get('/', async (req, res) => {
-  res.render('pages/index', {})
-});
+router.get('/', productsController.list);
 
 /**
  * Exporting router.

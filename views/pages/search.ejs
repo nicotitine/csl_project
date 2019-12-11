@@ -64,62 +64,12 @@
         <% include ../partials/footer %>
     </footer>
 
-
     <script src="https://code.jquery.com/jquery-3.4.1.js"
         integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
     <!-- VUE.JS SCRIPT -->
-    <script>
-        const app = new Vue({
-            el: '#app',
-            data: () => {
-                return {
-                    term: null,
-                    searchResult: null,
-                    links: {
-                        products: '/products/'
-                    }
-                }
-            },
-            mounted() {
-
-            },
-            methods: {
-                getCarrefourPrice(product) {
-                    
-                    const carrefour = product.retailers.find((retailer) => {
-                        return retailer.name == 'Carrefour';
-                    });
-
-                    if(carrefour) {
-                        return carrefour.globalPrice;
-                    }
-
-                    return false;
-                }
-            },
-            watch: {
-                term: {
-                    handler(val, oldVal) {
-                        const data = {
-                            term: val
-                        };
-
-                        if (val.length > 0) {
-                            let self = this;
-                            axios.get('/search/auto/?term=' + val).then((response) => {
-                                self.searchResult = response.data
-                            })
-                        }
-
-                    },
-                    deep: true
-                }
-            }
-        });
-
-    </script>
+    <script src="/scripts/search.vue.js"></script>
 </body>
 
 </html>

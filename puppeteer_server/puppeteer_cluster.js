@@ -11,7 +11,7 @@ let cluster, delay;
 // We need to speed test the server connection in order to predict how many time we have to wait
 // until the page is loaded. It will be used as follow : page.waitFor(fatest.bestPing * 10).
 speedTest({
-    maxTime: 1000
+    maxTime: 100000
 }).on('bestservers', servers => {
     const fatest = servers[0];
     for (let i = 1; i < servers.length; i++) {
@@ -80,6 +80,36 @@ io.on("connection", function (socket) {
             id: params.id
         }
         socket.emit('getOFFResponse', finalData);
+    });
+
+    /**
+     * Request from the server to get product informations.
+     * @param {Object} params contains the product gtin and the user socket id.
+     */
+    socket.on('getGoogle', async (params) => {
+
+        /**
+         * Execute puppeteer_google function in background. We wait the execution to be complete.
+         * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, delay).
+         * @param {Function} Scrapping.puppeteer_google is the function executed by the puppeteer cluster.
+         * @returns {Object} contains valuable data scrapped using puppeteer.
+         */
+        const dataPuppeteer = {
+            gtin: params.data.gtin,
+            delay: delay
+        }
+        const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_google);
+
+        /**
+         * Send the scrapped data to the central server. Wich will persist data and send it back to the final user.
+         * @param {String} message is the socket message.
+         * @param {Object} finalData contains scrapped data and the final user socket id.
+         */
+        const finalData = {
+            data: result,
+            id: params.id
+        }
+        socket.emit('getGoogleResponse', finalData);
     });
 
     /**
@@ -295,3 +325,5 @@ io.on("connection", function (socket) {
         socket.emit('getPriceResponse', finalData);
     });
 });
+
+main();

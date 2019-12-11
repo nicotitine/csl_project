@@ -60,40 +60,19 @@
     <footer>
         <% include ../partials/footer %>
     </footer>
+
+    <!-- EJS PRODUCTS VARIABLE (WILL BE REMOVED USING JS) -->
+    <div id="productsVariable" hidden>
+        <%= products %>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.4.1.js"
         integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
     <script src="/socket.io/socket.io.js"></script>
 
     <!-- VUE.JS SCRIPT -->
-    <script>
-        const app = new Vue({
-            el: '#app',
-            data: () => {
-                return {
-                    products: null,
-                    links: {
-                        products: '/products/'
-                    }
-                }
-            },
-            mounted() {
-                this.products = JSON.parse(`<%- products %>`);
-            },
-            methods: {
-                getCarrefourPrice(product) {
-                    
-                    const carrefour = product.retailers.find((retailer) => {
-                        return retailer.name == 'Carrefour';
-                    });
-
-                    if(carrefour) {
-                        return carrefour.globalPrice;
-                    }
-
-                    return false;
-                }
-            }
-        });
+    <script src="/scripts/products.vue.js">
+        
     </script>
 </body>
 

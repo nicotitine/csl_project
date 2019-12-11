@@ -35,6 +35,9 @@ const productSchema = mongoose.Schema({
     categories: [{
         type: String
     }],
+    description: {
+        type: String
+    },
     retailers: [{
         name: {
             type: String

@@ -1,14 +1,24 @@
+/**
+ * Modules import.
+ */
 const ioClient = require('socket.io')
 const serverSocket = require('socket.io-client').connect('http://127.0.0.1:9091');
+
+/**
+ * Models import.
+ */
 const Product = require('../models/product.model')
 const Category = require('../models/category.model')
 
+/**
+ * Handles every socket events (from client and from puppeteer cluster).
+ * @param {Object} app the main express app. 
+ */
 const serve = async (app) => {
     /**
      * CLIENT SOCKET REQUEST HANDLING
      */
     const clientSocket = ioClient.listen(app);
-
     clientSocket.sockets.on('connection', async (socket) => {
 
         /**
@@ -27,6 +37,23 @@ const serve = async (app) => {
             };
 
             serverSocket.emit('getOFF', params);
+        });
+
+        /**
+         * Request from the client to get informations on Google for a product.
+         * @param {String} gtin the worldwide product identifier.
+         */
+        socket.on('getGoogle', async (gtin) => {
+            console.log(`Requesting Google informations for ${gtin} (${socket.id})`);
+
+            const params = {
+                data: {
+                    gtin: gtin
+                },
+                id: socket.id
+            };
+
+            serverSocket.emit('getGoogle', params);
         });
 
 
@@ -192,6 +219,33 @@ const serve = async (app) => {
         }
     })
 
+    /**
+     * Send back the response to the client.
+     * @param {Object} response is the response from the puppeteer server. Contains product informations and the client socket id.
+     */
+    serverSocket.on('getGoogleResponse', async (response) => {
+        // TODO
+        console.log(response.data.data.product);
+        const product = response.data.data.product;
+
+        const productPersist = new Product({
+            gtin: product.gtin,
+            name: product.name,
+            description: product.description,
+            brand: [ product.marque ],
+            categories: [ product.typeDeProduit ]
+        });
+
+        console.log(productPersist);
+        
+       
+        clientSocket.to(response.id).emit('getGoogleResponse', productPersist);
+
+        //saveCategories(productPersist);
+
+        productPersist.save();
+
+    });
 
     /**
      * Send back the response to the client.
@@ -258,6 +312,11 @@ const serve = async (app) => {
 
 }
 
+/**
+ * Get ride of all '\n \r \t' special chars.
+ * @param {String} string the string to clean.
+ * @returns {String} the cleaned string. 
+ */
 const replaceAllBadChars = (string) => {
 
     /**
@@ -281,24 +340,44 @@ const replaceAllBadChars = (string) => {
     return string;
 };
 
+/**
+ * Create a object according to the product model and save it.
+ * @param {Product} product the OFF product.
+ * @returns {Object} the saved product.
+ */
 const createProductPersist = async (product) => {
 
+    /**
+     * Get the product name.
+     */
     if (product.product_name) {
         product.product_name = replaceAllBadChars(product.product_name);
     }
 
+    /**
+     * Get the product generic name.
+     */
     if (product.generic_name) {
         product.generic_name = replaceAllBadChars(product.generic_name);
     }
 
+    /**
+     * Get the product ingredients. The initial OFF String is replaced by an Array.
+     */
     if (product.ingredients_text) {
         product.ingredients_text = replaceAllBadChars(product.ingredients_text).replace(/_/gi, '').split(', ');
     }
 
+    /**
+     * Get the product quantity.
+     */
     if (product.quantity) {
         product.quantity = replaceAllBadChars(product.quantity);
     }
 
+    /**
+     * Get the product categories. The initial OFF String is replaced by an Array.
+     */
     if (product.categories_hierarchy) {
         for (let i = 0; i < product.categories_hierarchy.length; i++) {
             product.categories_hierarchy[i] = product.categories_hierarchy[i].split(':')[1];
@@ -306,10 +385,16 @@ const createProductPersist = async (product) => {
         }
     }
 
+    /**
+     * Get the product brands. The initial OFF String is replaced by an Array.
+     */
     if (product.brands) {
         product.brands = replaceAllBadChars(product.brands).split(',');
     }
 
+    /**
+     * Instanciate the product to save.
+     */
     const productPersist = new Product({
         'gtin': product._id,
         'name': product.product_name,
@@ -320,30 +405,46 @@ const createProductPersist = async (product) => {
         'brand': product.brands
     });
 
-    console.log(productPersist);
-    
-
+    /**
+     * Save the product.
+     */
     productPersist.save();
 
     return productPersist;
 }
 
+/**
+ * Save all new categories for a given product.
+ * @param {Product} product the new product.
+ */
 const saveCategories = async (product) => {
-
     for (let i = 0; i < product.categories.length; i++) {
+
+        /**
+         * Build the database query.
+         */
         const query = {
             name: product.categories[i]
         };
+
+        /**
+         * Execute the query.
+         */
         const category = await Category.findOne(query)
 
+        /**
+         * If the category doesn't exist yet, create a new one and save it.
+         */
         if (!category) {
             const categoryPersist = new Category(query);
-
             await categoryPersist.save();
         }
     }
 }
 
+/**
+ * Exporting controllers.
+ */
 module.exports = {
     serve
 };

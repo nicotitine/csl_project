@@ -31,6 +31,92 @@ async function puppeteer_OFF({
     return productJson;
 }
 
+async function puppeteer_google({
+    data,
+    page
+}) {
+
+    /**
+     * The default result we send back to the server.
+     */
+    let result = {
+        data: {
+            product: {
+                gtin: data.gtin
+            }
+        },
+        errors: []
+    }
+
+    /**
+     * Defines page user agent.
+     */
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0');
+
+    /**
+     * Goes to google.com.
+     */
+    await page.goto('https://google.com');
+
+    /**
+     * Wait for the main input to be loaded.
+     */
+    await page.waitForSelector('input[name="q"]');
+
+    console.log('google ok');
+    
+
+    /**
+     * Type the gtin in the main input and simulates an "Enter key press" using "\n".
+     */
+    await page.type('input[name="q"]', data.gtin + '\n', {
+        delay: 20
+    });
+
+    /**
+     * Wait for the product div to be loaded.
+     */
+    await page.waitForSelector('div[data-name="details"]');
+
+    const results =  await page.evaluate((result) => {
+
+        const camelize = (str) => {
+            return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
+                return index == 0 ? word.toLowerCase() : word.toUpperCase();
+            }).replace(/\s+/g, '');
+        }
+
+        const divs = document.documentElement.querySelectorAll('div[data-name="details"] div[class="pla-ikpd__modal-content"] div[class="mCKFRe"]')
+
+        for(let i = 0; i < divs.length; i++) {
+            const field = camelize(divs[i].querySelector('div:nth-child(1)').innerText
+                            .replace(/é/gm, 'e')
+                            .replace(/è/gm, 'e')
+                            .replace(/â/gm, 'a')
+                            .replace(/î/gm, 'i')
+                            .replace(/\//gm, '')
+                        )
+                        .replace(/\'/gm, '')
+                        .replace(/-/gm, '')
+                            
+            const value = divs[i].querySelector('div:nth-child(2)').innerText;
+
+            result.data.product[field] = value;
+        }
+
+        result.data.product.name = document.documentElement.querySelector('div[data-name="details"] div[class="pla-ikpd__modal-content-container"] div[class="NYWkjc"] div:nth-child(2) div').innerText;
+        result.data.product.description = document.documentElement.querySelector(' div[data-name="details"] div[class="pla-ikpd__modal-content"] div[class="sUELFd"]').innerText.replace(/  /gm, ' ');
+
+        return result;
+    }, result);
+
+    console.log(results);
+    
+
+
+    return results;
+}
+
 /**
  * Search images for a given product id.
  * CARREFUL : parameters are confusing.
@@ -84,6 +170,7 @@ async function puppeteer_imgs({
     await page.type('input[name="q"]', data.gtin + '\n', {
         delay: 20
     });
+    
 
     /**
      * Wait for the results to be displayed.
@@ -1096,6 +1183,7 @@ async function puppeteer_price_intermarche({
 
 module.exports = {
     puppeteer_OFF,
+    puppeteer_google,
     puppeteer_imgs,
     puppeteer_price_carrefour,
     puppeteer_price_auchan,

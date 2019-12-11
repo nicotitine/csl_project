@@ -9,7 +9,7 @@ const favicon = require('serve-favicon');
 /**
  * Controllers imports.
  */
-const sockets = require('./controllers/socketController');
+const sockets = require('./controllers/socket.controller');
 
 /**
  * Routers imports.
