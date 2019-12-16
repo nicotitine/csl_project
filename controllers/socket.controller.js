@@ -36,6 +36,9 @@ const serve = async (app) => {
                 id: socket.id
             };
 
+            console.log();
+
+
             serverSocket.emit('getOFF', params);
         });
 
@@ -78,7 +81,7 @@ const serve = async (app) => {
 
         socket.on('reportImages', async (gtin, report) => {
             console.log(`Reporting images for ${gtin} (${socket.id})`);
-            
+
             const params = {
                 data: {
                     gtin: gtin,
@@ -91,12 +94,14 @@ const serve = async (app) => {
         });
 
         socket.on('reportIngredients', async (gtin) => {
-            const product = await Product.findOne({gtin: gtin});
-            
-            if(product) {
+            const product = await Product.findOne({
+                gtin: gtin
+            });
+
+            if (product) {
                 let result;
 
-                result = product.ingredients[0].split('-').map(function(item) {
+                result = product.ingredients[0].split('-').map(function (item) {
                     return item.trim();
                 });;
                 console.log(result);
@@ -106,7 +111,9 @@ const serve = async (app) => {
         });
 
         socket.on('updateIngredients', async (gtin, ingredients) => {
-            const product = await Product.findOne({gtin: gtin});
+            const product = await Product.findOne({
+                gtin: gtin
+            });
 
             product.ingredients = ingredients;
 
@@ -114,14 +121,15 @@ const serve = async (app) => {
         });
 
         socket.on('updateImages', async (gtin, images) => {
-            const product = await Product.findOne({gtin: gtin});
+            const product = await Product.findOne({
+                gtin: gtin
+            });
             console.log(product.images);
             product.images = images;
 
             await product.save();
 
         });
-
 
         socket.on('getPriceCarrefour', async (gtin) => {
             console.log(`Requesting carrefour price for ${gtin} (${socket.id})`);
@@ -135,63 +143,6 @@ const serve = async (app) => {
 
             serverSocket.emit('getPriceCarrefour', params);
         });
-
-
-        socket.on('getPriceAuchan', async (gtin, zipcode) => {
-            console.log(`Requesting auchan price for ${gtin} at ${zipcode} (${socket.id})`);
-
-            const params = {
-                data: {
-                    gtin: gtin
-                },
-                id: socket.id
-            };
-
-            serverSocket.emit('getPriceAuchan', params);
-        });
-
-
-        socket.on('getPriceLeclerc', async (gtin, zipcode) => {
-            console.log(`Requesting leclerc price for ${gtin} at ${zipcode} (${socket.id})`);
-
-            const params = {
-                data: {
-                    gtin: gtin
-                },
-                id: socket.id
-            };
-
-            serverSocket.emit('getPriceLeclerc', params);
-        });
-
-
-        socket.on('getPriceMagasinsu', async (gtin, zipcode) => {
-            console.log(`Requesting magasins-u price for ${gtin} at ${zipcode} (${socket.id})`);
-
-            const params = {
-                data: {
-                    gtin: gtin
-                },
-                id: socket.id
-            };
-
-            serverSocket.emit('getPriceMagasinsu', params);
-        });
-
-
-        socket.on('getPriceIntermarche', async (gtin, zipcode) => {
-            console.log(`Requesting intermarche price for ${gtin} at ${zipcode} (${socket.id})`);
-
-            const params = {
-                data: {
-                    gtin: gtin
-                },
-                id: socket.id
-            };
-
-            serverSocket.emit('getPriceIntermarche', params);
-        });
-
 
         socket.on('disconnect', () => {
             socket.disconnect();
@@ -213,9 +164,11 @@ const serve = async (app) => {
         if (data.data.status == 1) {
             const product = await createProductPersist(data.data.product);
 
-            clientSocket.to(data.id).emit('getOFFResponse', product);
+            clientSocket.to(data.id).emit('getOFFResponse', product, true);
 
             saveCategories(product);
+        } else {
+            clientSocket.to(data.id).emit('getOFFResponse', data, false)
         }
     })
 
@@ -232,13 +185,13 @@ const serve = async (app) => {
             gtin: product.gtin,
             name: product.name,
             description: product.description,
-            brand: [ product.marque ],
-            categories: [ product.typeDeProduit ]
+            brand: [product.marque],
+            categories: [product.typeDeProduit]
         });
 
         console.log(productPersist);
-        
-       
+
+
         clientSocket.to(response.id).emit('getGoogleResponse', productPersist);
 
         //saveCategories(productPersist);
@@ -253,7 +206,9 @@ const serve = async (app) => {
      */
     serverSocket.on('getImagesResponse', async (response) => {
         console.log(response.data.data)
-        const product = await Product.findOne({gtin: response.data.data.gtin});
+        const product = await Product.findOne({
+            gtin: response.data.data.gtin
+        });
         console.log(product);
         await Product.findOneAndUpdate({
             gtin: response.data.data.gtin
@@ -301,15 +256,6 @@ const serve = async (app) => {
             });
         }
     });
-
-
-
-    serverSocket.on('getPriceResponse', async (data) => {
-
-        clientSocket.to(data.id).emit('getPriceResponse', data.data);
-    });
-
-
 }
 
 /**
@@ -318,21 +264,23 @@ const serve = async (app) => {
  * @returns {String} the cleaned string. 
  */
 const replaceAllBadChars = (string) => {
+    if (string) {
 
-    /**
-     * Remove all '\n'.
-     */
-    string = string.replace(/\n/g, ' ');
+        /**
+         * Remove all '\n'.
+         */
+        string = string.replace(/\n/g, ' ');
 
-    /**
-     * Remove all '\r'.
-     */
-    string = string.replace(/\r/g, ' ');
+        /**
+         * Remove all '\r'.
+         */
+        string = string.replace(/\r/g, ' ');
 
-    /**
-     * Remove all '\t'.
-     */
-    string = string.replace(/\t/g, ' ');
+        /**
+         * Remove all '\t'.
+         */
+        string = string.replace(/\t/g, ' ');
+    }
 
     /**
      * Return the result.
@@ -380,8 +328,10 @@ const createProductPersist = async (product) => {
      */
     if (product.categories_hierarchy) {
         for (let i = 0; i < product.categories_hierarchy.length; i++) {
-            product.categories_hierarchy[i] = product.categories_hierarchy[i].split(':')[1];
-            product.categories_hierarchy[i] = replaceAllBadChars(product.categories_hierarchy[i]).replace(/-/gi, ' ');
+            if(product.categories_hierarchy[i]) {
+                product.categories_hierarchy[i] = product.categories_hierarchy[i].split(':')[1];
+                product.categories_hierarchy[i] = replaceAllBadChars(product.categories_hierarchy[i]).replace(/-/gi, ' ');
+            }
         }
     }
 

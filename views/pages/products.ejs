@@ -16,11 +16,17 @@
     <br>
 
     <!-- MAIN SECTION -->
-    <section class="text-white container-flat mt-5" id="app">
+    <section class="text-white container-flat mt-5" v-if="products" id="app">
         <div class="flat" id="products">
 
             <!-- MAIN TITLE -->
-            <h3 class="text-center">All products</h3>
+            <h3 class="text-center" v-if="category">
+                All products (for <a :href="'/categories/' + category.trim()">{{ category }}</a> category)
+            </h3>
+            <h3 class="text-center" v-else-if="brand">
+                All products (for <a :href="'/products/brand/' + brand.trim()">{{ brand }}</a> brand)
+            </h3>
+            <h3 class="text-center" v-else>All products</h3>
 
             <!-- PRODUCTS CONTAINER -->
             <div class="mt-4 products card-columns pr-4 pl-4">
@@ -64,6 +70,16 @@
     <!-- EJS PRODUCTS VARIABLE (WILL BE REMOVED USING JS) -->
     <div id="productsVariable" hidden>
         <%= products %>
+    </div>
+
+    <!-- EJS CATEGORY VARIABLE (WILL BE REMOVED USING JS) -->
+    <div id="categoryVariable" hidden>
+        <%= category %>
+    </div>
+
+    <!-- EJS BRAND VARIABLE (WILL BE REMOVED USING JS) -->
+    <div id="brandVariable" hidden>
+        <%= brand %>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.4.1.js"

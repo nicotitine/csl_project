@@ -17,7 +17,7 @@
     <br>
 
     <!-- MAIN SECTION -->
-    <section class=" text-white bg-secondary container mt-5" id="app" style="border-radius: .3rem;">
+    <section class=" text-white bg-secondary container mt-5 mb-5" id="app" style="border-radius: .3rem;">
 
         <!-- MAIN CONTAINER -->
         <div v-if="product" class="pb-4 pt-4 pr-4 pl-4" id="product">
@@ -37,7 +37,7 @@
 
             <!-- PRODUCT GTIN -->
             <small class="">
-                
+
                 <!-- GTIN TEXT -->
                 {{ product.gtin }}
             </small>
@@ -51,7 +51,7 @@
 
                     <!-- BRAND LINK -->
                     <a class="mr-3 notiflix-btn notiflix-btn-confirm notiflix-btn-sm" :href="urls.brand + brand">
-                        
+
                         <!-- BRAND TEXT -->
                         {{ brand }}
                     </a>
@@ -66,8 +66,9 @@
                 <small class="capitalize" v-for="category in product.categories">
 
                     <!-- CATEGORY LINK -->
-                    <a class="capitalize mr-3 notiflix-btn notiflix-btn-confirm notiflix-btn-sm" :href="urls.categories + category">
-                        
+                    <a class="capitalize mr-3 mt-3 notiflix-btn notiflix-btn-confirm notiflix-btn-sm"
+                        :href="urls.categories + category">
+
                         <!-- CATEGORY TEXT -->
                         {{ category.charAt(0).toUpperCase() + category.slice(1) }}
                     </a>
@@ -87,10 +88,10 @@
 
                     <!-- CARREFOUR PRICE -->
                     <li v-if="carrefour">
-                        
+
                         <!-- STORE ICON -->
                         <i class="fas fa-store"></i>
-                        
+
                         <!-- PRICE TEXT -->
                         Carrefour : {{ carrefour.globalPrice }}€
                     </li>
@@ -109,66 +110,14 @@
 
                     <!-- CARREFOUR PRICE ERROR -->
                     <li v-if="errors.carrefourPrice">
-                        
+
                         <!-- STORE ICON -->
                         <i class="fas fa-store"></i>
 
                         <!-- ERROR TEXT -->
-                        Carrefour : Product not found. 
-
-                        <!-- RETRY BUTTON -->
-                        <a @click="retryCarrefourPrice" href="#" class="btn btn-primary">
-                            
-                            <!-- RETRY ICON -->
-                            <i style="color: --primary" class="fas fa-redo"></i>
-                            
-                            <!-- RETRY TEXT -->
-                            retry
-                        </a>
+                        Carrefour : Product not found.
                     </li>
                 </ul>
-
-                <!-- ZIPCODE FORM -->
-                <form class="needs-validation" id="zipcodeForm" @submit.prevent="submitZipcode">
-
-                    <!-- INFORMATIVE TEXT -->
-                    <p>Enter your zipcode to check for your local prices <br><small>(Your
-                            data is not
-                            stored)</small></p>
-
-                    <!-- FORM CONTAINER -->
-                    <div class="form-row notiflix">
-                        <div class="col-md-3 mb-0">
-                            <div class="input-group">
-
-                                <!-- INPUT -->
-                                <input v-model="userInput.zipcode" id="zipcodeInput" type="text" name="zipcodeInput"
-                                    class="form-control" placeholder="Zipcode (Ex: 64000)" aria-label="zipcode"
-                                    aria-describedby="basic-addon2" minlength="5" maxlength="5" required>
-
-                                <!-- SEND BUTTON -->
-                                <div class="input-group-append ml-4">
-                                    <button id="zipcodeSubmitBtn" class="notiflix-btn notiflix-btn-confirm" type="submit" href="#">
-                                        
-                                        <!-- SEND ICON -->
-                                        <i class="fas fa-paper-plane mr-1"></i>
-                                        
-                                        <!-- SEND TEXT -->
-                                        Send
-                                    </button>
-                                </div>
-
-                                <!-- ERROR TEXT -->
-                                <div class="invalid-feedback">
-                                    Please choose a valid zipcode.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- INFORMATIVE TEXT -->
-                    <div class="mt-0"><small>This can take a while (up to 30') and is not 100% successful</small></div>
-                </form>
             </div>
 
 
@@ -201,10 +150,22 @@
                         <a href="#" class="notiflix-btn notiflix-btn-confirm" @click.prevent="reportImages">
 
                             <!-- REPORT ICON -->
-                            <i class="fas fa-bug mr-1"></i> 
+                            <i class="fas fa-bug mr-1"></i>
 
                             <!-- REPORT TEXT -->
                             report
+                        </a>
+                    </small>
+
+                    <!-- RETRY BUTTON -->
+                    <small v-else class="align-middle pb-1 ml-4">
+                        <a href="#" class="notiflix-btn notiflix-btn-confirm" @click.prevent="retryImages">
+
+                            <!-- RETRY ICON -->
+                            <i class="fas fa-undo-alt mr-1"></i>
+
+                            <!-- RETRY TEXT -->
+                            retry
                         </a>
                     </small>
                 </h3>
@@ -224,9 +185,9 @@
 
                         <!-- CAROUSEL IMAGES -->
                         <div class="carousel-inner" id="carouselWrapper">
-                            <div v-for="(image, index) in product.images" class="carousel-item text-center"
+                            <div v-for="(image, index) in product.images" class="carousel-item text-center mt-3"
                                 v-bind:class="{ active: index == 0 }">
-                                <img :src="image" alt="" class="product-img" @click="openImgModal">
+                                <img :src="image" alt="" class="product-img bg-white" @click="openImgModal">
                             </div>
                         </div>
 
@@ -273,7 +234,7 @@
 
                             <!-- REPORT ICON -->
                             <i class="fas fa-bug mr-1"></i>
-                            
+
                             <!-- REPORT TEXT -->
                             report
                         </a>
@@ -328,7 +289,8 @@
 
 
         <!-- IMAGE VIEWER MODAL -->
-        <div v-if="product" class="modal fade" id="productGalery" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div v-if="product" class="modal fade" id="productGalery" tabindex="-1" role="dialog"
+            aria-labelledby="myModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
 
@@ -365,7 +327,7 @@
         <div class="modal fade" id="reportResponseModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
             aria-hidden="true">
             <div class="modal-dialog modal-lg">
-                <div class="modal-content">
+                <div class="modal-content bg-dark">
                     <!-- MODAL HEADER -->
                     <div class="modal-header">
 
@@ -410,17 +372,22 @@
                                 <span class="sr-only">Next</span>
                             </a>
                         </div>
+                        <div v-else>
+                            <p class="text-center">
+                                No additional image found
+                            </p>
+                        </div>
                     </div>
 
                     <!-- MODAL FOOTER -->
                     <div class="modal-footer">
 
                         <!-- DISMISS BUTTON -->
-                        <button type="button" class="btn btn-secondary float-left"
+                        <button type="button" class="notiflix-btn notiflix-btn-basic float-left"
                             @click="closeReportResponseModal">Cancel</button>
 
                         <!-- SAVE CHANGES BUTTON -->
-                        <button type="button" class="btn btn-primary" @click="saveNewImages">Save !</button>
+                        <button type="button" class="notiflix-btn notiflix-btn-confirm" @click="saveNewImages">Save !</button>
                     </div>
                 </div>
             </div>
@@ -435,7 +402,7 @@
 
                     <!-- MODAL HEADER -->
                     <div class="modal-header">
-                        
+
                         <!-- MODAL TITLE -->
                         <h4 class="modal-title">Is that better ?</h4>
 
@@ -455,7 +422,7 @@
 
                                     <!-- INGREDIENT ICON -->
                                     <i class="fas fa-carrot"></i>
-                                    
+
                                     <!-- INGREDIENT TEXT -->
                                     {{ ingredient}}
                                 </li>
@@ -478,6 +445,7 @@
         </div>
     </section>
 
+    <br>
 
     <!-- FOOTER -->
     <footer>
@@ -491,13 +459,13 @@
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
-        </script>
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
         integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
-        </script>
+    </script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
-        </script>
+    </script>
     <script src="/socket.io/socket.io.js"></script>
 
     <script>

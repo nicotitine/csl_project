@@ -20,7 +20,9 @@ const list = async (req, res) => {
    */
   if(products) {
     res.render('pages/products', {
-      'products': JSON.stringify(products)
+      products: JSON.stringify(products),
+      category: '',
+      brand: ''
     });
   }
 };
@@ -88,21 +90,23 @@ const getByBrand = async (req, res) => {
    * Build the database query.
    */
   const query = {
-    "brand": req.params.brand
+    brand: req.params.brand
   }
 
   /**
    * Execute the query.
    */
   const products = await Product.find(query);
+  
 
   /**
    * Send the response to the client.
    */
   if(products) {
     res.render('pages/products', {
-      'products': JSON.stringify(products),
-      'category': req.params.brand
+      products: JSON.stringify(products),
+      category: '',
+      brand: req.params.brand
     });
   }
 };

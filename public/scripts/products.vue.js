@@ -5,12 +5,19 @@ const app = new Vue({
             products: null,
             links: {
                 products: '/products/'
-            }
+            },
+            category: null
         }
     },
     mounted() {
         this.products = JSON.parse($('#productsVariable').text());
         $('#productsVariable').remove();
+
+        this.category = $("#categoryVariable").text().trim();
+        $('#categoryVariable').remove();
+
+        this.brand = $('#brandVariable').text().trim();
+        $('#brandVariable').remove();        
     },
     methods: {
         getCarrefourPrice(product) {

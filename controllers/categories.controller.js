@@ -86,12 +86,16 @@ const listProducts = async (req, res) => {
    */
   const products = await Product.find(query);
 
+  console.log(products);
+  
+
   /**
    * Send the response to the client.
    */
   res.render('pages/products', {
-    'products': products,
+    'products': JSON.stringify(products),
     'category': req.params.category,
+    'brand': '',
     'page': req.url,
     'returnLink': returnLink,
     'productName': productName
