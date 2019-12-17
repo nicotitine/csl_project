@@ -342,6 +342,50 @@ const createProductPersist = async (product) => {
         product.brands = replaceAllBadChars(product.brands).split(',');
     }
 
+    const nutriscore = {
+        grade: product.nutriscore_grade,
+        nutriments: {
+            fat: product.nutriments.fat_100g + product.nutriments.fat_unit,
+            saturatedFat: product.nutriments['saturated-fat_100g'] + product.nutriments['saturated-fat_unit'],
+            sugar: product.nutriments.sugars_100g + product.nutriments.sugars_unit,
+            salt: product.nutriments.salt_100g + product.nutriments.salt_unit
+        },
+        table: {
+            per100g: {
+                energy: {
+                    kj: product.nutriments.energy_100g + "kj",
+                    kcal: Number(product.nutriments.energy_100g / 4.184).toFixed(0) + "kcal"
+                },
+                fat: product.nutriments.fat_100g + product.nutriments.fat_unit,
+                fatSaturated: product.nutriments['saturated-fat_100g'] + product.nutriments['saturated-fat_unit'],
+                carbohydrates: product.nutriments.carbohydrates_100g + product.nutriments.carbohydrates_unit,
+                sugar: product.nutriments.sugars_100g + product.nutriments.sugars_unit,
+                fiber: product.nutriments.fiber_100g + product.nutriments.fiber_unit,
+                proteins: product.nutriments.proteins_100g + product.nutriments.proteins_unit,
+                salt: product.nutriments.salt_100g + product.nutriments.salt_unit,
+                sodium: product.nutriments.sodium_100g + product.nutriments.sodium_unit,
+                scoreFr: product.nutriments['nutrition-score-fr_100g']
+            },
+            perPortion: {
+                energy: {
+                    kj: product.nutriments.energy_serving + "kj",
+                    kcal: Number(product.nutriments.energy_serving / 4.184).toFixed(0) + "kcal"
+                },
+                fat: product.nutriments.fat_serving + product.nutriments.fat_unit,
+                fatSaturated: product.nutriments['saturated-fat_serving'] + product.nutriments['saturated-fat_unit'],
+                carbohydrates: product.nutriments.carbohydrates_serving + product.nutriments.carbohydrates_unit,
+                sugar: product.nutriments.sugars_serving + product.nutriments.sugars_unit,
+                fiber: product.nutriments.fiber_serving + product.nutriments.fiber_unit,
+                proteins: product.nutriments.proteins_serving + product.nutriments.proteins_unit,
+                salt: product.nutriments.salt_serving + product.nutriments.salt_unit,
+                sodium: product.nutriments.sodium_serving + product.nutriments.sodium_unit,
+                scoreFr: product.nutriments['nutrition-score-fr_serving']
+            }
+        }
+    };
+
+    const linkToOFF = 'https://fr.openfoodfacts.org/produit/' + product._id;
+
     /**
      * Instanciate the product to save.
      */
@@ -352,8 +396,12 @@ const createProductPersist = async (product) => {
         'ingredients': product.ingredients_text,
         'quantity': product.quantity,
         'categories': product.categories_hierarchy,
-        'brand': product.brands
+        'brand': product.brands,
+        nutriscore: nutriscore,
+        linkToOFF:linkToOFF
     });
+
+    console.log(productPersist);
 
     /**
      * Save the product.

@@ -38,6 +38,105 @@ const productSchema = mongoose.Schema({
     description: {
         type: String
     },
+    nutriscore: {
+        grade: {
+            type: String
+        },
+        nutriments: {
+            fat: {
+                type: String
+            },
+            fatSaturated: {
+                type: String
+            },
+            sugar: {
+                type: String
+            },
+            salt: {
+                type: String
+            }
+        },
+        table: {
+            per100g: {
+                energy: {
+                    kj: {
+                        type: String
+                    },
+                    kcal: {
+                        type: String
+                    }
+                },
+                fat: {
+                    type: String
+                },
+                fatSaturated: {
+                    type: String
+                },
+                carbohydrates: {
+                    type: String
+                },
+                sugar: {
+                    type: String
+                },
+                fiber: {
+                    type: String
+                },
+                proteins: {
+                    type: String
+                },
+                salt: {
+                    type: String
+                },
+                sodium: {
+                    type: String
+                },
+                scoreFr: {
+                    type: String
+                }
+            },
+            perPortion: {
+                energy: {
+                    kj: {
+                        type: String
+                    },
+                    kcal: {
+                        type: String
+                    }
+                },
+                fat: {
+                    type: String
+                },
+                fatSaturated: {
+                    type: String
+                },
+                carbohydrates: {
+                    type: String
+                },
+                sugar: {
+                    type: String
+                },
+                fiber: {
+                    type: String
+                },
+                proteins: {
+                    type: String
+                },
+                salt: {
+                    type: String
+                },
+                sodium: {
+                    type: String
+                },
+                scoreFr: {
+                    type: String
+                }
+
+            }
+        }
+    },
+    linkToOFF: {
+        type: String
+    },
     retailers: [{
         name: {
             type: String

@@ -67,7 +67,7 @@ const app = new Vue({
         }
 
         this.socket.on('getOFFResponse', async (data, found) => {
-            console.log(data);
+            console.log(data.nutriscore.table);
             
             if (found == 1) {
                 console.log('Product retrieved');
