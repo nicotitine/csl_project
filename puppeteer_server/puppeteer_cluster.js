@@ -11,7 +11,7 @@ let cluster, delay;
 // We need to speed test the server connection in order to predict how many time we have to wait
 // until the page is loaded. It will be used as follow : page.waitFor(fatest.bestPing * 10).
 speedTest({
-    maxTime: 100000
+    maxTime: 10
 }).on('bestservers', servers => {
     const fatest = servers[0];
     for (let i = 1; i < servers.length; i++) {
