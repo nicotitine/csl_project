@@ -19,17 +19,16 @@
     <section class="container-flat mt-5 text-white" id="app">
         <div class="flat">
             <!-- MAIN TITLE -->
-            <h3 class="text-center">Search for product(s)</h3>
+            <h3 class="text-center">Chercher dans les produits</h3>
 
             <!-- SEARCH FORM -->
             <form class="text-center ">
                 <div class="form-group row justify-content-center ml-0 mr-0">
                     <div class="col-xs-2 card bg-secondary p-4 mt-2 notiflix">
                         <input type="text" class="form-control text-center" v-model="term" id="search"
-                            aria-describedby="searchHelp" placeholder="gtin, brand, name" />
-                        <small id="searchHelp" class="form-text">To scrap new product, please provide a valid
-                            gtin.</small>
-                        <p class="mt-4">Results will be displayed bellow</p>
+                            aria-describedby="searchHelp" placeholder="code barre, marque, nom" />
+                        <small id="searchHelp" class="form-text">Pour dataminer un nouveau produit, merci de soumettre un code barre valide.</small>
+                        <p class="mt-4">Les résultats seront affichés en dessous</p>
                     </div>
                 </div>
 
@@ -37,7 +36,7 @@
 
             <!-- RESULTS CONTAINER -->
             <div class="mt-4">
-                <h3 class="text-center">Results ({{ searchResult.length}})</h3>
+                <h3 class="text-center">Résultas ({{ searchResult.length}})</h3>
                 <div v-if="searchResult.length > 0" class="pr-4 pl-4 results card-columns" id="results">
                     <!-- PRODUCTS LIST (CARD) -->
                     <div v-for="product in searchResult" class="bg-secondary card mt-2 mb-2">
@@ -49,20 +48,19 @@
                             <h5 class="card-title mb-0 mt-2">{{ product.name }}</h5>
                             <div><small class="mt-0">{{ product.gtin }}</small></div>
                             <p v-if="getCarrefourPrice(product)" class="card-text mt-2">Carrefour : {{ getCarrefourPrice(product) }}€</p>
-                            <p v-else class="mt-2"><small class="d-block">Price not available yet</small></p>
-                            <a :href="links.products + product.gtin" class="notiflix-btn notiflix-btn-confirm">More
-                                details</a>
+                            <p v-else class="mt-2"><small class="d-block">Prix indisponible</small></p>
+                            <a :href="links.products + product.gtin" class="notiflix-btn notiflix-btn-confirm">Détails</a>
                         </div>
                     </div>
                 </div>
                 <div v-else-if="validGtin" class="text-center">
                     <p>
-                        This is a valid gtin code.
+                        C'est un code barre valide !
                     </p>
                     <a :href="'/products/' + term" class="notiflix-btn notiflix-btn-confirm">Scrap it !</a>
                 </div>
                 <div v-else class="text-center">
-                    No result yet.
+                    Aucun résultat.
                 </div>
             </div>
         </div>

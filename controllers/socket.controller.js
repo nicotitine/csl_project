@@ -36,8 +36,6 @@ const serve = async (app) => {
                 id: socket.id
             };
 
-            console.log();
-
 
             serverSocket.emit('getOFF', params);
         });
@@ -104,7 +102,6 @@ const serve = async (app) => {
                 result = product.ingredients[0].split('-').map(function (item) {
                     return item.trim();
                 });;
-                console.log(result);
 
                 clientSocket.to(socket.id).emit('reportIngredientsResponse', result);
             }
@@ -124,7 +121,6 @@ const serve = async (app) => {
             const product = await Product.findOne({
                 gtin: gtin
             });
-            console.log(product.images);
             product.images = images;
 
             await product.save();
@@ -160,7 +156,6 @@ const serve = async (app) => {
 
 
     serverSocket.on('getOFFResponse', async (data) => {
-        console.log(data);
         if (data.data.status == 1) {
             const product = await createProductPersist(data.data.product);
 
@@ -177,8 +172,7 @@ const serve = async (app) => {
      * @param {Object} response is the response from the puppeteer server. Contains product informations and the client socket id.
      */
     serverSocket.on('getGoogleResponse', async (response) => {
-        // TODO
-        console.log(response.data.data.product);
+
         const product = response.data.data.product;
 
         const productPersist = new Product({
@@ -188,8 +182,6 @@ const serve = async (app) => {
             brand: [product.marque],
             categories: [product.typeDeProduit]
         });
-
-        console.log(productPersist);
 
 
         clientSocket.to(response.id).emit('getGoogleResponse', productPersist);
@@ -205,11 +197,10 @@ const serve = async (app) => {
      * @param {Object} data is the response from the puppeteer server. Contains images urls as an Array and the client socker id.
      */
     serverSocket.on('getImagesResponse', async (response) => {
-        console.log(response.data.data)
         const product = await Product.findOne({
             gtin: response.data.data.gtin
         });
-        console.log(product);
+
         await Product.findOneAndUpdate({
             gtin: response.data.data.gtin
         }, {
@@ -229,8 +220,6 @@ const serve = async (app) => {
     })
 
     serverSocket.on('getPriceCarrefourResponse', async (data) => {
-
-        console.log(data)
 
         // We can now respond to the client
         clientSocket.to(data.id).emit('getPriceCarrefourResponse', data);
@@ -326,14 +315,17 @@ const createProductPersist = async (product) => {
     /**
      * Get the product categories. The initial OFF String is replaced by an Array.
      */
+    const categories = [];
     if (product.categories_hierarchy) {
         for (let i = 0; i < product.categories_hierarchy.length; i++) {
             if(product.categories_hierarchy[i]) {
-                product.categories_hierarchy[i] = product.categories_hierarchy[i].split(':')[1];
-                product.categories_hierarchy[i] = replaceAllBadChars(product.categories_hierarchy[i]).replace(/-/gi, ' ');
+                const locale = product.categories_hierarchy[i].split(':')[0].toUpperCase();
+                if(locale == 'FR') {
+                    categories.push(replaceAllBadChars(product.categories_hierarchy[i].split(':')[1]).replace(/-/gi, ' '));
+                }
             }
         }
-    }
+    }    
 
     /**
      * Get the product brands. The initial OFF String is replaced by an Array.
@@ -395,13 +387,11 @@ const createProductPersist = async (product) => {
         'generic_name': product.generic_name,
         'ingredients': product.ingredients_text,
         'quantity': product.quantity,
-        'categories': product.categories_hierarchy,
+        'categories': categories,
         'brand': product.brands,
         nutriscore: nutriscore,
         linkToOFF:linkToOFF
     });
-
-    console.log(productPersist);
 
     /**
      * Save the product.
