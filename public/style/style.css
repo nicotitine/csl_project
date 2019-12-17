@@ -158,3 +158,21 @@ input:hover {
   border-color: #00b462;
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 180, 18, 0.6);
 }
+
+.displayMobile {
+  display: none;
+}
+
+@media screen and (max-width: 768px) {
+  /*
+   * styles go here
+   */
+
+  #app {
+    border-radius: 0px !important;
+  }
+
+  #ingredients {
+    border-right: none !important;
+  }
+} 
