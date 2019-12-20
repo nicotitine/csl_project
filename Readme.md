@@ -2,6 +2,8 @@
 
 J'ai décidé d'utiliser Node.JS et EJS côté serveur et VueJS côté client comme technologies pour ce projet.
 
+Ce projet est également disponible sur <a href="https://github.com/nicotitine/csl_project">github</a>.
+
 ## Installation
 
 NPM et Node.JS doivent être installés sur votre machine.
