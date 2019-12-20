@@ -1,5 +1,5 @@
 const auv = require('ak-url-validate');
-const Error = require('../models/Error');
+const Error = require('../server/models/Error');
 const fs = require('fs');
 
 async function puppeteer_OFF({
@@ -62,8 +62,6 @@ async function puppeteer_google({
      * Wait for the main input to be loaded.
      */
     await page.waitForSelector('input[name="q"]');
-
-    console.log('google ok');
     
 
     /**
@@ -109,10 +107,6 @@ async function puppeteer_google({
 
         return result;
     }, result);
-
-    console.log(results);
-    
-
 
     return results;
 }
@@ -239,9 +233,7 @@ async function puppeteer_imgs({
         }
     }
 
-    if(data.report == 1) {
-        console.log('report 1');
-        
+    if(data.report == 1) {        
         imagesFound = false;
         result.data.images = [];
     }
@@ -257,8 +249,6 @@ async function puppeteer_imgs({
             delay: 20
         });
 
-        console.log('ok for then');
-
         try {
             await page.waitForSelector('div[jscontroller="Q7Rsec"]', {
                 timeout: data.delay * 10
@@ -268,7 +258,6 @@ async function puppeteer_imgs({
             result.errors.push(error);
         }
 
-        console.log('after waitForSselector')
         const images = await page.evaluate((gtin) => {
             let divs = document.querySelectorAll('div[jscontroller="Q7Rsec"]');
             let images = [];
@@ -338,9 +327,7 @@ async function puppeteer_imgs({
             }
 
 
-            if (result.data.images.length > 0) {
-                console.log('images found');
-                
+            if (result.data.images.length > 0) {                
                 imagesFound = true;
             }
         }
@@ -348,7 +335,6 @@ async function puppeteer_imgs({
     
 
     if (!imagesFound || data.report == 2) {
-        console.log('!images');
 
         const res = await page.evaluate(() => {
             if (document.querySelector('div[id="rg_s"] div[jscontroller="Q7Rsec"] a')) {
@@ -371,8 +357,6 @@ async function puppeteer_imgs({
         const error = new Error('No image found.', 3, 'Images');
         result.errors.push(error);
     }
-
-    console.log(result);
 
     return result;
 }

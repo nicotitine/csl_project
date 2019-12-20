@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "start": "env-cmd -f ./.env nodemon app.js",
+    "start": "env-cmd -f ./.env nodemon server/app.js",
     "puppeteer": "env-cmd -f ./.env nodemon puppeteer_server/puppeteer_cluster.js"
   },
   "author": "Nicolas <nico.hincelin@gmail.com>",

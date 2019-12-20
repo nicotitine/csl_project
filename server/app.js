@@ -33,7 +33,7 @@ require('./db/db');
  * View engine seting (EJS).
  */
 app.set('view engine', 'ejs');
-app.set("views", __dirname + "/views");
+app.set("views", __dirname + "/../client/views");
 app.set("view options", {
     layout: false
 });
@@ -41,12 +41,12 @@ app.set("view options", {
 /**
  * Favicon use.
  */
-app.use(favicon(__dirname + '/public/coin.png'));
+app.use(favicon(__dirname + '/../client/public/coin.png'));
 
 /**
  * Public folder use.
  */
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/../client/public'));
 
 /**
  * Routing.

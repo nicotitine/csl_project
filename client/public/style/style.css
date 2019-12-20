@@ -164,10 +164,6 @@ input:hover {
 }
 
 @media screen and (max-width: 768px) {
-  /*
-   * styles go here
-   */
-
   #app {
     border-radius: 0px !important;
   }
