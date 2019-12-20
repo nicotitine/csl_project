@@ -34,7 +34,7 @@ Si vous souhaitez visualiser le site sur votre mobile, c'est possible en vous re
 
 ## Fonctionnement
 
-Pour scrapper un nouveau produit, rendez-vous dans la page de Recherche ou vous entrez un code barre valide dans le champ. Si c'est un format de gtin valide, il vous proposera d'aller scrapper le produit. Vous pouvez aussi vous rendre à l'adresse `http://localhost:9090/produits/:gtin` ou `:gtin` est le code barre du produit.
+Pour scrapper un nouveau produit, rendez-vous dans la page de Recherche ou vous entrez un code barre valide dans le champ. Si c'est un format de code barre valide, il vous proposera d'aller scrapper le produit. Vous pouvez aussi vous rendre à l'adresse `http://localhost:9090/products/:gtin` ou `:gtin` est le code barre du produit.
 
 1. La requête est envoyée au serveur
 2. Le serveur vérifie que le produit n'est pas déjà dans la base de données
@@ -55,14 +55,14 @@ Pour scrapper un nouveau produit, rendez-vous dans la page de Recherche ou vous 
 
 ## Et en cas de charge importante ?
 
-Les opérations de scrappings sont des opérations assez lourdes: il faut ouvrir un nouvel onglet du navigateur (Chromium dans le cas de puppeteer), charger le site web, récupérer les informations,... 
+Les opérations de scrapping sont des opérations assez lourdes: il faut ouvrir un nouvel onglet du navigateur (Chromium dans le cas de puppeteer), charger le site web, récupérer les informations,... 
 
 Imaginons maintenant le scénario de 10 requêtes à peu près en même temps  
 
 - Le cluster doit ouvrir 10 onglets (très lourd en mémoire - utilisation CPU)
 - Charger 10 sites web différents sur les 10 onglets (très très lourd en utilisation CPU - 100%)
 
-Il s'est déjà écoulé plusieurs secondes avant que le cluster n'ait chargé les 10 sites web. Si d'autres requêtes continuent d'arriver, le cluster explose.
+Il s'est déjà écoulé plusieurs secondes avant que le cluster n'ait chargé les 10 sites web. Si d'autres requêtes continuent d'arriver entre temps, le cluster continue d'ouvrir de nouveaux onglets et finira par planter.
 
 
 
