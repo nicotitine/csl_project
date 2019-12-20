@@ -34,6 +34,8 @@ Une fois les deux programmes lancés, vous pouvez vous rendre sur la page accuei
 
 Si vous souhaitez visualiser le site sur votre mobile, c'est possible en vous rendant à l'adresse `http://votre_adresse_ip_locale:9090`, `votre_adresse_ip_locale` étant l'adresse locale de l'ordinateur sur lequel `npm run start` tourne (Exemple : `192.168.1.11`).
 
+<div style="page-break-after: always;"></div>
+
 ## Fonctionnement
 
 Pour scrapper un nouveau produit, rendez-vous dans la page de Recherche ou vous entrez un code barre valide dans le champ. Si c'est un format de code barre valide, il vous proposera d'aller scrapper le produit. Vous pouvez aussi vous rendre à l'adresse `http://localhost:9090/products/:gtin` ou `:gtin` est le code barre du produit.
@@ -51,9 +53,13 @@ Pour scrapper un nouveau produit, rendez-vous dans la page de Recherche ou vous 
 8. Le cluster puppeteer répond avec les informations.
 9. Le serveur pousse les nouvelles données vers le client pour l'affichage et sauvegarde les nouvelles informations.
 
+<div style="page-break-after: always;"></div>
+
 ### Schéma récapitulatif
 
 ![](diagram.png)
+
+<div style="page-break-after: always;"></div>
 
 ## Et en cas de charge importante ?
 
