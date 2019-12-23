@@ -147,6 +147,8 @@ io.on("connection", function (socket) {
             data: result,
             id: params.id
         }
+
+        io.to(socket.id).emit('getImagesResponse', finalData);
         socket.emit('getImagesResponse', finalData);
     });
 
