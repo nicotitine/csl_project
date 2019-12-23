@@ -36,7 +36,7 @@ const main = async () => {
         concurrency: Cluster.CONCURRENCY_BROWSER,
         maxConcurrency: cpuCount,
         puppeteerOptions: {
-            /* args: ['--no-sandbox']*/ }
+        args: ['--no-sandbox'] }
     });
 
 
