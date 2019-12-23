@@ -83,7 +83,7 @@ io.on("connection", function (socket) {
             id: params.id
         }
 
-        io.to(socket.id).emit('getImagesResponse', finalData);
+        io.to(socket.id).emit('getOFFResponse', finalData);
     });
 
     /**
@@ -114,7 +114,7 @@ io.on("connection", function (socket) {
             id: params.id
         }
 
-        io.to(socket.id).emit('getImagesResponse', finalData);
+        io.to(socket.id).emit('getGoogleResponse', finalData);
     });
 
     /**
@@ -181,7 +181,8 @@ io.on("connection", function (socket) {
             data: result,
             id: params.id
         }
-        socket.emit('reportImagesResponse', finalData);
+        
+        io.to(socket.id).emit('reportImagesResponse', finalData);
     });
 
     /**
@@ -215,6 +216,6 @@ io.on("connection", function (socket) {
          */
   
         
-        io.to(socket.id).emit('getImagesResponse', result);
+        io.to(socket.id).emit('getPriceCarrefourResponse', result);
     });
 });
