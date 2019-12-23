@@ -402,12 +402,17 @@ async function puppeteer_price_carrefour({
      */
     await page.goto('https://www.google.fr/');
 
-    await page.screenshot({path: 'google.fr.png'});
+    
+    
 
     /**
      * Wait for the main input to be loaded.
      */
     await page.waitForSelector('input[name="q"]');
+
+    console.log(await page.evaluate(() => {
+        return document.documentElement.innerHTML;
+    }));
 
     /**
      * Types the gtin in the main input and simulates an "Enter key press" using "\n".
