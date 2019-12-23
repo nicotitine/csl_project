@@ -387,6 +387,11 @@ async function puppeteer_price_carrefour({
         errors: []
     };
 
+    await page.setExtraHTTPHeaders({
+        'Accept-Charset': 'utf-8',
+        'Content-Type': 'text/html; charset=utf-8',
+      })
+
     /**
      * Defines page user agent.
      */
