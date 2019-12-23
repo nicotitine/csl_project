@@ -402,6 +402,12 @@ async function puppeteer_price_carrefour({
      */
     await page.goto('https://www.google.fr/');
 
+    try {
+        await page.waitForSelector('div[id="SIvCob"]', {timeout: 2000});
+        await page.click('div[id="SIvCob"] a');
+    } catch {
+
+    }
     
     
 
