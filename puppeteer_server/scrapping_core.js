@@ -402,6 +402,8 @@ async function puppeteer_price_carrefour({
      */
     await page.goto('https://www.google.fr/');
 
+    await page.screenshot({path: 'google.fr.png'});
+
     /**
      * Wait for the main input to be loaded.
      */
