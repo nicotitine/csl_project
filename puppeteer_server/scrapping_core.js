@@ -430,7 +430,7 @@ async function puppeteer_price_carrefour({
      */
 
      console.log(await page.evaluate(() => {
-         return document.querySelector('div[id="search"] div[class="g"] div[class="slp f"]').innerHTML;
+         return document.querySelector('div[id="search"]').innerHTML;
      }))
     const results = await page.evaluate((result) => {
         if (document.querySelector('div[id="search"] div[class="g"] div[class="slp f"]') != null) {
