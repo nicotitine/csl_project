@@ -402,23 +402,21 @@ async function puppeteer_price_carrefour({
      */
     await page.goto('https://www.google.fr/');
 
+    /**
+     * This is for VPS purpose. Since its located in an other country, Google show us result in non-UTF-8 text, which is un-readable by puppeteer.
+     * We just click on "Change to France" to fix that
+     */
     try {
         await page.waitForSelector('div[id="SIvCob"]', {timeout: 2000});
         await page.click('div[id="SIvCob"] a');
     } catch {
 
     }
-    
-    
 
     /**
      * Wait for the main input to be loaded.
      */
     await page.waitForSelector('input[name="q"]');
-
-    console.log(await page.evaluate(() => {
-        return document.documentElement.innerHTML;
-    }));
 
     /**
      * Types the gtin in the main input and simulates an "Enter key press" using "\n".
@@ -446,10 +444,6 @@ async function puppeteer_price_carrefour({
     /**
      * Evaluate the page if there is any result. Evaluation allows us to read HTML node values.
      */
-
-     console.log(await page.evaluate(() => {
-         return document.querySelector('div[id="search"]').innerHTML;
-     }))
     const results = await page.evaluate((result) => {
         if (document.querySelector('div[id="search"] div[class="g"] div[class="slp f"]') != null) {
             let stringPrice = document.querySelector('div[id="search"] div[class="g"] div[class="slp f"]').innerHTML.split('€')[0].trim();
