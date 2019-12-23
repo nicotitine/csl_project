@@ -420,7 +420,7 @@ async function puppeteer_price_carrefour({
             timeout: data.delay * 5
         });
     } catch (e) {
-        const error = new Error('Product not found.', 2, 'Carrefour');
+        const error = new Error('Product not found.', 3, 'Chromium');
         result.errors.push(error);
         return result;
     }
