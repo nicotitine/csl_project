@@ -51,6 +51,9 @@ const main = async () => {
  */
 io.on("connection", function (socket) {
 
+    console.log("connection");
+    
+
     /**
      * Request from the server to get global information for a product
      * @param {Object} params contains the product gtin and the user socket id.
@@ -118,6 +121,8 @@ io.on("connection", function (socket) {
      */
     socket.on('getImages', async (params) => {
 
+        console.log('Requesting images for product ' + params.data.gtin);
+
         /**
          * Execute puppeteer_imgs function in background. We wait the execution to be complete.
          * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, delay).
@@ -129,6 +134,9 @@ io.on("connection", function (socket) {
             delay: delay
         }
         const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_imgs);
+
+        console.log(result);
+        
 
         /**
          * Send the scrapped data to the central server. Wich will persist data and send it back to the final user.
@@ -179,6 +187,8 @@ io.on("connection", function (socket) {
      */
     socket.on('getPriceCarrefour', async (params) => {
 
+        console.log('Requesting carrefour price for product ' + params.data.gtin);
+
         /**
          * Execute puppeteer_price_carrefour function in background. We wait the execution to be complete.
          * @param {Object} dataPuppeteer contains the variable we need in the function (gtin, zipcode, delay).
@@ -190,7 +200,10 @@ io.on("connection", function (socket) {
             delay: delay
         }
         const result = await cluster.execute(dataPuppeteer, Scrapping.puppeteer_price_carrefour);
-        result.id = params.id      
+        result.id = params.id
+
+        console.log(result);
+        
 
         /**
          * Send the scrapped data to the central server. Wich will persist data and send it back to the final user.
