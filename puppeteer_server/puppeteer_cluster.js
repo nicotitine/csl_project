@@ -82,7 +82,8 @@ io.on("connection", function (socket) {
             data: result,
             id: params.id
         }
-        socket.emit('getOFFResponse', finalData);
+
+        io.to(socket.id).emit('getImagesResponse', finalData);
     });
 
     /**
@@ -112,7 +113,8 @@ io.on("connection", function (socket) {
             data: result,
             id: params.id
         }
-        socket.emit('getGoogleResponse', finalData);
+
+        io.to(socket.id).emit('getImagesResponse', finalData);
     });
 
     /**
@@ -149,7 +151,6 @@ io.on("connection", function (socket) {
         }
 
         io.to(socket.id).emit('getImagesResponse', finalData);
-        socket.emit('getImagesResponse', finalData);
     });
 
     /**
@@ -213,6 +214,6 @@ io.on("connection", function (socket) {
          * @param {Object} result contains scrapped data and the final user socket id.
          */
         
-        socket.emit('getPriceCarrefourResponse', result);
+        io.to(socket.id).emit('getImagesResponse', finalData);
     });
 });
