@@ -213,7 +213,8 @@ io.on("connection", function (socket) {
          * @param {String} message is the socket message.
          * @param {Object} result contains scrapped data and the final user socket id.
          */
+  
         
-        io.to(socket.id).emit('getImagesResponse', finalData);
+        io.to(socket.id).emit('getImagesResponse', result);
     });
 });
